@@ -1,0 +1,12 @@
+{
+  "name": "jira-update-script",
+  "version": "1.0.0",
+  "description": "Script for updating Jira tickets based on Git branches",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "axios": "^0.24.0"
+  }
+}
