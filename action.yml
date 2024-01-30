@@ -1,0 +1,12 @@
+name: "Get Jira Issues"
+description: "Get the Jira Issues from a Pull Request commit messages"
+inputs:
+  githubToken:
+    description: 'Github Token'
+    required: true
+outputs:
+  jiraIssues:
+    description: 'List of Jira Issues'
+runs:
+  using: 'node20'
+  main: 'index.js'
