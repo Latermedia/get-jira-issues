@@ -7,8 +7,9 @@ get-jira-issues:
    name: get-jira-issues
    runs-on: ubuntu-latest
    steps:
-      - name: Get Jira Issues
+    - name: Get Jira Issues
       uses: Latermedia/get-jira-issues@v1
+      id: get-issues
       with:
          githubToken: ${{ env.GH_API_TOKEN }}
 ```
