@@ -19,6 +19,8 @@ if (!pullRequestNumber) {
     console.error('PR_NUMBER environment variable not provided.');
     process.exit(1);
 }
+console.log(githubFullUrl)
+console.log(prHeaders)
 
 axios.get(githubFullUrl, { headers: prHeaders })
   .then(prDataResponse => {
