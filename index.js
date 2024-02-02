@@ -17,8 +17,10 @@ const prHeaders = {
 
 async function getCommitMessages(pullRequestNumber) {
   try {
-    const response = await axios.get(githubFullUrl, { headers: prHeaders });
-    return response.data.map(commit => commit.commit.message);
+    axios.get(githubFullUrl, { headers: prHeaders })
+      .then((prDataResponse) => {
+        return prDataResponse.data.map(commit => commit.commit.message);
+      }
   } catch (error) {
     console.error(`Error fetching commit messages: ${error.message}`);
     process.exit(1);
