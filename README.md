@@ -27,3 +27,6 @@ get-jira-issues:
 
 ## REGEX
 `/([A-Z]{2,}-[0-9]+)/gm`
+
+## Output Usage
+${{ steps.get-issues.outputs.jiraIssues }}
