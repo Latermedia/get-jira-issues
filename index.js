@@ -15,48 +15,28 @@ const prHeaders = {
   'Authorization': `Bearer ${githubToken}`,
 };
 
-async function getCommitMessages(pullRequestNumber) {
-  try {
-    axios.get(githubFullUrl, { headers: prHeaders })
-      .then((prDataResponse) => {
-        return prDataResponse.data.map(commit => commit.commit.message);
-      }
-  } catch (error) {
-    console.error(`Error fetching commit messages: ${error.message}`);
-    process.exit(1);
-  }
-}
-
-function extractJiraTickets(commitMessages) {
-  const jiraTicketSet = new Set();
-
-  const pattern = /([A-Z]{2,}-[0-9]+)/gm;
-
-  commitMessages.forEach(message => {
-    const matches = message.match(pattern);
-    if (matches) {
-      matches.forEach(match => jiraTicketSet.add(match));
-    }
-  });
-
-  return Array.from(jiraTicketSet);
-}
-
-if (require.main === module) {
-
-
-  if (!pullRequestNumber) {
+if (!pullRequestNumber) {
     console.error('PR_NUMBER environment variable not provided.');
     process.exit(1);
-  }
-
-  getCommitMessages(pullRequestNumber)
-    .then(commitMessages => {
-      const jiraTickets = extractJiraTickets(commitMessages);
-      console.log(JSON.stringify(jiraTickets));
-    })
-    .catch(error => {
-      console.error(`Error: ${error.message}`);
-      process.exit(1);
-    });
 }
+
+axios.get(githubFullUrl, { headers: prHeaders })
+  .then(prDataResponse => {
+    const commitMessages = prDataResponse.data.map(commit => commit.commit.message);
+    const jiraTicketSet = new Set();
+    const pattern = /([A-Z]{2,}-[0-9]+)/gm;
+
+    commitMessages.forEach(message => {
+      const matches = message.match(pattern);
+      if (matches) {
+        matches.forEach(match => jiraTicketSet.add(match));
+      }
+    });
+
+    const jiraTickets = Array.from(jiraTicketSet);
+    console.log(JSON.stringify({ jiraTickets }));
+  })
+  .catch(error => {
+    console.error(`Error: ${error.message}`);
+    process.exit(1);
+  });
