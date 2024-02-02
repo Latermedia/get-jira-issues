@@ -1,6 +1,14 @@
 # get-jira-issues
 GitHub Action: Gets issue IDs from github Pull Request commit messages
 
+## Workflow Required Environment Variables
+```
+env:
+  PR_NUMBER: ${{ github.event.pull_request.number }}
+  REPO: ${{ github.repository }}
+  GH_API_TOKEN: ${{ secrets.GH_API_TOKEN }}
+```
+
 ## Workflow Use
 ```
 get-jira-issues:
@@ -10,8 +18,6 @@ get-jira-issues:
     - name: Get Jira Issues
       uses: Latermedia/get-jira-issues@v1
       id: get-issues
-      with:
-         githubToken: ${{ env.GH_API_TOKEN }}
 ```
 
 ## What it does
