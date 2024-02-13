@@ -20,7 +20,7 @@ const fullDescription = 'Production Release for Sprint: ' + sprintName;
 const versionStrip = versionNumber.match(/v(\d+\.\d+\.\d+)/);
 const finalVersionNumber = versionStrip[1];
 const releaseTitle = 'im-' + finalVersionNumber;
-const jiraUrlStrip = jiraBaseUrl.match(/https:\/\/(\S*)/gm);
+const jiraUrlStrip = jiraBaseUrl.match(/https:\/\/(\S*)/);
 const jiraUrl = jiraUrlStrip[1];
 
 const prHeaders = {
