@@ -1,6 +1,15 @@
 name: "Get Jira Issues"
 description: "Get the Jira Issues from a Pull Request commit messages"
 inputs:
+  jiraApiToken:
+    description: 'JIRA Service API Token'
+    required: true
+  jiraServiceUser:
+    description: 'JIRA Service User'
+    required: true
+  jiraServer:
+    description: 'JIRA Server URL'
+    required: true
   githubToken:
     description: 'Github Token'
     required: true
