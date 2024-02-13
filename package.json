@@ -1,12 +1,15 @@
 {
-  "name": "jira-update-script",
+  "name": "jira-github-integration",
   "version": "1.0.0",
-  "description": "Script for updating Jira tickets based on Git branches",
+  "description": "Integration between Jira and GitHub",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
+  "author": "Your Name",
+  "license": "MIT",
   "dependencies": {
-    "axios": "^0.24.0"
+    "axios": "^0.24.0",
+    "jira-client": "^4.0.2"
   }
 }
