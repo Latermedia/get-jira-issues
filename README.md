@@ -63,4 +63,4 @@ jobs:
 * Close or Release(FRBI - project) the issue
 
 ## REGEX
-`/([A-Z]{2,}-[0-9]+)/gm`
+`/([a-zA-Z]{2,}-[0-9]+)/gm`
