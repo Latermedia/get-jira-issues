@@ -69,7 +69,7 @@ axios.get(githubFullUrl, { headers: prHeaders })
 
             if (issue.fields.project.key === 'Sprint' || issue.fields.project.key === 'PE') {
                 console.log(`Do nothing: ${singleIssue}`)
-            }else {
+            } else {
                 projectKeyListDup.push(issue.fields.project.key);
             }
 
