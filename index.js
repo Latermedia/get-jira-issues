@@ -66,13 +66,22 @@ axios.get(githubFullUrl, { headers: prHeaders })
         try {
             const singleIssue = `${jiraIssueID}`;
             const issue = await jira.findIssue(singleIssue);
-            projectKeyListDup.push(issue.fields.project.key);
+
+            if (issue.fields.project.key === 'Sprint' || issue.fields.project.key === 'PE') {
+                console.log(`Do nothing: ${singleIssue}`)
+            }else {
+                projectKeyListDup.push(issue.fields.project.key);
+            }
+
         } catch (err) {
             console.error(err);
             process.exit(1);
         }
     }
+
     const projectKeyList = [...new Set(projectKeyListDup)];
+    console.log("The unique Project key list:");
+    console.log([...projectKeyList]);
 
     const createProject = projectKeyList.map(async (jiraProjectKey) => {
         const singleKey = `${jiraProjectKey}`;
@@ -99,10 +108,17 @@ axios.get(githubFullUrl, { headers: prHeaders })
                 name: releaseTitle
             }
 
-            await jira.updateIssue(singleIssue2, { fields: { fixVersions: [releaseTitleA] } });
-	        console.log(`Fix Version updated: ${singleIssue2} to ${releaseTitle}`);
+            if (projectKey === 'Sprint' || projectKey === 'PE') {
+                console.log(`Do nothing: ${singleIssue2}`)
+            } else {
+                await jira.updateIssue(singleIssue2, { fields: { fixVersions: [releaseTitleA] } });
+                console.log(`Fix Version updated: ${singleIssue2} to ${releaseTitle}`);
+            }
 
-			if (projectKey === 'FRBI') {
+			if (projectKey === 'Sprint' || projectKey === 'PE') {
+				console.log(`Do nothing: ${singleIssue2}`)
+			}
+			else if (projectKey === 'FRBI') {
 				const transitions = await jira.listTransitions(singleIssue2);
 			    const filteredTransition = transitions.transitions.filter(t => t.name === 'Released');
 
