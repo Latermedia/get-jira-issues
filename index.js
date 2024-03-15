@@ -52,6 +52,8 @@ axios.get(githubFullUrl, { headers: prHeaders })
     const commitMessages = prDataResponse.data.map(commit => commit.commit.message);
     const jiraTicketSet = new Set();
     const pattern = /([a-zA-Z]{2,}-[0-9]+)/gm;
+    const excludeSprint = /Sprint-[0-9]+/gm;
+    const excludePe = /PE-[0-9]+/gm;
 
     commitMessages.forEach(message => {
       const matches = message.match(pattern);
@@ -65,11 +67,12 @@ axios.get(githubFullUrl, { headers: prHeaders })
     for (const jiraIssueID of jiraTickets) {
         try {
             const singleIssue = `${jiraIssueID}`;
-            const issue = await jira.findIssue(singleIssue);
 
-            if (issue.fields.project.key === 'Sprint' || issue.fields.project.key === 'PE') {
-                console.log(`Do nothing: ${singleIssue}`)
+            if (excludeSprint.test(singleIssue) || excludePe.test(singleIssue)) {
+                console.log(`Do nothing: ${singleIssue}`);
+                continue;
             } else {
+                const issue = await jira.findIssue(singleIssue);
                 projectKeyListDup.push(issue.fields.project.key);
             }
 
@@ -102,40 +105,40 @@ axios.get(githubFullUrl, { headers: prHeaders })
     for (const jiraIssueID2 of jiraTickets) {
         try {
             const singleIssue2 = `${jiraIssueID2}`;
-            const jiraIssue2 = await jira.findIssue(singleIssue2);
-			const projectKey = (jiraIssue2.fields.project.key);
-	        const releaseTitleA = {
-                name: releaseTitle
-            }
 
-            if (projectKey === 'Sprint' || projectKey === 'PE') {
-                console.log(`Do nothing: ${singleIssue2}`)
+            if (excludeSprint.test(singleIssue) || excludePe.test(singleIssue)) {
+                console.log(`Do nothing: ${singleIssue}`);
+                continue;
             } else {
+                const jiraIssue2 = await jira.findIssue(singleIssue2);
+                const projectKey = (jiraIssue2.fields.project.key);
+
+                const releaseTitleA = {
+                    name: releaseTitle
+                }
+
                 await jira.updateIssue(singleIssue2, { fields: { fixVersions: [releaseTitleA] } });
                 console.log(`Fix Version updated: ${singleIssue2} to ${releaseTitle}`);
-            }
 
-			if (projectKey === 'Sprint' || projectKey === 'PE') {
-				console.log(`Do nothing: ${singleIssue2}`)
-			}
-			else if (projectKey === 'FRBI') {
-				const transitions = await jira.listTransitions(singleIssue2);
-			    const filteredTransition = transitions.transitions.filter(t => t.name === 'Released');
+                if (projectKey === 'FRBI') {
+                    const transitions = await jira.listTransitions(singleIssue2);
+                    const filteredTransition = transitions.transitions.filter(t => t.name === 'Released');
 
-			    const filterId = filteredTransition[0].id + "";
-			    const transitionId = parseInt(filterId);
+                    const filterId = filteredTransition[0].id + "";
+                    const transitionId = parseInt(filterId);
 
-			    await jira.transitionIssue(singleIssue2, { transition: { id: transitionId } });
-                console.log(`Issue ${singleIssue2} transitioned to Released.`);
-			} else {
-				const transitions = await jira.listTransitions(singleIssue2);
-			    const filteredTransition = transitions.transitions.filter(t => t.name === 'Closed');
+                    await jira.transitionIssue(singleIssue2, { transition: { id: transitionId } });
+                    console.log(`Issue ${singleIssue2} transitioned to Released.`);
+                } else {
+                    const transitions = await jira.listTransitions(singleIssue2);
+                    const filteredTransition = transitions.transitions.filter(t => t.name === 'Closed');
 
-			    const filterId = filteredTransition[0].id + "";
-			    const transitionId = parseInt(filterId);
+                    const filterId = filteredTransition[0].id + "";
+                    const transitionId = parseInt(filterId);
 
-			    await jira.transitionIssue(singleIssue2, { transition: { id: transitionId } });
-                console.log(`Issue ${singleIssue2} transitioned to Closed.`);
+                    await jira.transitionIssue(singleIssue2, { transition: { id: transitionId } });
+                    console.log(`Issue ${singleIssue2} transitioned to Closed.`);
+                }
             }
 
         } catch (err) {
