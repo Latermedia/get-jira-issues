@@ -68,10 +68,15 @@ axios.get(githubFullUrl, { headers: prHeaders })
         try {
             const singleIssue = `${jiraIssueID}`;
 
-            if (excludeSprint.test(singleIssue) || excludePe.test(singleIssue)) {
+            if (excludeSprint.test(singleIssue)) {
                 console.log(`Do nothing: ${singleIssue}`);
                 continue;
-            } else {
+            }
+            else if (excludePe.test(singleIssue)) {
+                console.log(`Do nothing: ${singleIssue}`);
+                continue;
+            }
+            else {
                 const issue = await jira.findIssue(singleIssue);
                 projectKeyListDup.push(issue.fields.project.key);
             }
@@ -106,10 +111,15 @@ axios.get(githubFullUrl, { headers: prHeaders })
         try {
             const singleIssue2 = `${jiraIssueID2}`;
 
-            if (excludeSprint.test(singleIssue) || excludePe.test(singleIssue)) {
-                console.log(`Do nothing: ${singleIssue}`);
+            if (excludeSprint.test(singleIssue2)) {
+                console.log(`Do nothing: ${singleIssue2}`);
                 continue;
-            } else {
+            }
+            else if (excludePe.test(singleIssue2)) {
+                console.log(`Do nothing: ${singleIssue2}`);
+                continue;
+            }
+            else {
                 const jiraIssue2 = await jira.findIssue(singleIssue2);
                 const projectKey = (jiraIssue2.fields.project.key);
 
