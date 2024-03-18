@@ -87,7 +87,7 @@ axios.get(githubFullUrl, { headers: prHeaders })
         }
     }
 
-    const projectKeyList = [...new Set(projectKeyListDup)];
+    let projectKeyList = [...new Set(projectKeyListDup)];
     console.log("The unique Project key list:");
     console.log([...projectKeyList]);
     projectKeyList = projectKeyList.filter(item => !exclusions.includes(item));
