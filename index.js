@@ -51,9 +51,10 @@ axios.get(githubFullUrl, { headers: prHeaders })
   .then(async prDataResponse => {
     const commitMessages = prDataResponse.data.map(commit => commit.commit.message);
     const jiraTicketSet = new Set();
-    const pattern = /([a-zA-Z]{2,}-[0-9]+)/gm;
+    const pattern = /[a-zA-Z]{2,}-[0-9]+/gm;
     const excludeSprint = /Sprint-[0-9]+/gm;
     const excludePe = /PE-[0-9]+/gm;
+    const exclusions = ['Sprint', 'PE'];
 
     commitMessages.forEach(message => {
       const matches = message.match(pattern);
@@ -75,8 +76,7 @@ axios.get(githubFullUrl, { headers: prHeaders })
             else if (excludePe.test(singleIssue)) {
                 console.log(`Do nothing: ${singleIssue}`);
                 continue;
-            }
-            else {
+            } else {
                 const issue = await jira.findIssue(singleIssue);
                 projectKeyListDup.push(issue.fields.project.key);
             }
@@ -89,6 +89,9 @@ axios.get(githubFullUrl, { headers: prHeaders })
 
     const projectKeyList = [...new Set(projectKeyListDup)];
     console.log("The unique Project key list:");
+    console.log([...projectKeyList]);
+    projectKeyList = projectKeyList.filter(item => !exclusions.includes(item));
+    console.log("Project key list after running exclusions:");
     console.log([...projectKeyList]);
 
     const createProject = projectKeyList.map(async (jiraProjectKey) => {
