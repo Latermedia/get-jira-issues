@@ -54,7 +54,7 @@ axios.get(githubFullUrl, { headers: prHeaders })
     const pattern = /[a-zA-Z]{2,}-[0-9]+/gm;
     const excludeSprint = /Sprint-[0-9]+/gm;
     const excludePe = /PE-[0-9]+/gm;
-    const exclusions = [Sprint, PE];
+    const exclusions = ['Sprint', 'PE'];
 
     commitMessages.forEach(message => {
       const matches = message.match(pattern);
