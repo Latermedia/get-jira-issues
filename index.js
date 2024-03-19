@@ -60,7 +60,7 @@ axios.get(githubFullUrl, { headers: prHeaders })
       if (message.match(excludeSprint)) {
           console.log(`Do nothing: ${message}`);
       }
-      else if (matches.match(excludePe)) {
+      else if (message.match(excludePe)) {
           console.log(`Do nothing: ${message}`);
       } else {
           matches.forEach(match => jiraTicketSet.add(match));
