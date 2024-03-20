@@ -50,7 +50,7 @@ if (!pullRequestNumber) {
 axios.get(githubFullUrl, { headers: prHeaders })
   .then(async prDataResponse => {
     let commitMessages = prDataResponse.data.map(commit => commit.commit.message);
-    const jiraTicketSet = new Set();
+    let jiraTicketSet = new Set();
     const pattern = /[a-zA-Z]{2,}-[0-9]+/gm;
     const excludeSprint = /Sprint-[0-9]+/gm;
     const excludePe = /PE-[0-9]+/gm;
