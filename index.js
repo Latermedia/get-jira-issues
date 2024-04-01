@@ -64,7 +64,7 @@ axios.get(githubFullUrl, { headers: prHeaders })
     axios.get(githubPullFull, { headers: prHeaders })
     .then((prDataResponse) => {
       const prTitleCheck = prDataResponse.data.title.match(pattern);
-      prTitleCheck.forEach(match => jiraTicketSet.add(match));
+      jiraTicketSet.push(prTitleCheck);
     });
 
     if (!jiraTicketSet || !jiraTicketSet.length){
