@@ -16,6 +16,7 @@ const versionNumber = process.env.VERSION_NUMBER;
 const sprintName = process.env.SPRINT_NAME;
 
 const githubFullUrl = `${githubApiUrl}${repository}${githubPulls}${pullRequestNumber}${githubCommits}`;
+const githubPullFull = `${githubApiUrl}${repository}${githubPulls}${pullRequestNumber}`;
 const fullDescription = 'Production Release for Sprint: ' + sprintName;
 const versionStrip = versionNumber.match(/v(\d+\.\d+\.\d+)/);
 const finalVersionNumber = versionStrip[1];
@@ -59,6 +60,18 @@ axios.get(githubFullUrl, { headers: prHeaders })
       const matches = message.match(pattern);
 	  matches.forEach(match => jiraTicketSet.add(match));
     });
+
+    axios.get(githubPullFull, { headers: prHeaders })
+    .then((prDataResponse) => {
+      const prTitleCheck = prDataResponse.data.title.match(pattern);
+      prTitleCheck.forEach(match => jiraTicketSet.add(match));
+    });
+
+    if (!jiraTicketSet || !jiraTicketSet.length){
+      console.log("There are no issues in the commits or PR Titles!");
+      console.log("NOTHING TO DO -- exiting no issues updated.");
+      process.exit(1);
+    }
 
 	jiraTicketSet.forEach(issue => {
 	  if (issue.match(excludeSprint)) {
