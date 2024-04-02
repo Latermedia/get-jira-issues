@@ -23,6 +23,7 @@ const finalVersionNumber = versionStrip[1];
 const releaseTitle = 'im-' + finalVersionNumber;
 const jiraUrlStrip = jiraBaseUrl.match(/https:\/\/(\S*)/);
 const jiraUrl = jiraUrlStrip[1];
+let jiraTicketSet = new Set();
 
 const prHeaders = {
   'Accept': 'application/vnd.github.v3+json',
@@ -48,20 +49,20 @@ if (!pullRequestNumber) {
     process.exit(1);
 }
 
+axios.get(githubPullFull, { headers: prHeaders })
+  .then((prDataResponse) => {
+  const prTitleCheck = prDataResponse.data.title.match(pattern);
+  jiraTicketSet.add(prTitleCheck[0]);
+  console.log("Added ticket from title to array: ");
+  console.log(...jiraTicketSet);
+  });
+
 axios.get(githubFullUrl, { headers: prHeaders })
   .then(async prDataResponse => {
     let commitMessages = prDataResponse.data.map(commit => commit.commit.message);
-    let jiraTicketSet = new Set();
     const pattern = /[a-zA-Z]{2,}-[0-9]+/gm;
     const excludeSprint = /Sprint-[0-9]+/gm;
     const excludePe = /PE-[0-9]+/gm;
-
-    axios.get(githubPullFull, { headers: prHeaders })
-        .then((prDataResponse) => {
-          const prTitleCheck = prDataResponse.data.title.match(pattern);
-          jiraTicketSet.add(prTitleCheck[0]);
-          console.log(`Added ticket from title to array: ${prTitleCheck[0]}`);
-        });
 
     commitMessages.forEach(message => {
       const matches = message.match(pattern);
@@ -83,6 +84,12 @@ axios.get(githubFullUrl, { headers: prHeaders })
     const jiraTickets = Array.from(jiraTicketSet);
     console.log("List of Jira issues:");
     console.log(...jiraTickets);
+
+    if (!Array.isArray(jiraTickets) || !jiraTickets.length){
+          console.log("There are no issues in the commits or PR Titles!");
+          console.log("NOTHING TO DO -- exiting no issues updated.");
+          process.exit(1);
+        }
 
     for (const jiraIssueID of jiraTickets) {
         try {
