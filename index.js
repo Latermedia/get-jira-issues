@@ -23,8 +23,8 @@ const finalVersionNumber = versionStrip[1];
 const releaseTitle = 'im-' + finalVersionNumber;
 const jiraUrlStrip = jiraBaseUrl.match(/https:\/\/(\S*)/);
 const jiraUrl = jiraUrlStrip[1];
-let jiraTicketSet = new Set();
 const pattern = /[a-zA-Z]{2,}-[0-9]+/gm;
+let jiraTicketSet = new Set();
 
 const prHeaders = {
   'Accept': 'application/vnd.github.v3+json',
@@ -51,15 +51,15 @@ if (!pullRequestNumber) {
 }
 
 axios.get(githubPullFull, { headers: prHeaders })
-  .then((prDataResponse) => {
-  const prTitleCheck = prDataResponse.data.title.match(pattern);
+  .then((prDataResponse1) => {
+  const prTitleCheck = prDataResponse1.data.title.match(pattern);
   jiraTicketSet.add(prTitleCheck[0]);
   console.log("Added ticket from title to array: ");
   console.log(...jiraTicketSet);
   });
 
 axios.get(githubFullUrl, { headers: prHeaders })
-  .then(async prDataResponse => {
+  .then((prDataResponse) => {
     let commitMessages = prDataResponse.data.map(commit => commit.commit.message);
     const excludeSprint = /Sprint-[0-9]+/gm;
     const excludePe = /PE-[0-9]+/gm;
