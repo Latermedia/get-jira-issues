@@ -56,15 +56,16 @@ axios.get(githubFullUrl, { headers: prHeaders })
     const excludeSprint = /Sprint-[0-9]+/gm;
     const excludePe = /PE-[0-9]+/gm;
 
+    axios.get(githubPullFull, { headers: prHeaders })
+        .then((prDataResponse) => {
+          const prTitleCheck = prDataResponse.data.title.match(pattern);
+          jiraTicketSet.add(prTitleCheck[0]);
+          console.log(`Added ticket from title to array: ${prTitleCheck[0]}`);
+        });
+
     commitMessages.forEach(message => {
       const matches = message.match(pattern);
 	  matches.forEach(match => jiraTicketSet.add(match));
-    });
-
-    axios.get(githubPullFull, { headers: prHeaders })
-    .then((prDataResponse) => {
-      const prTitleCheck = prDataResponse.data.title.match(pattern);
-      jiraTicketSet.push(prTitleCheck);
     });
 
     if (!jiraTicketSet || !jiraTicketSet.length){
