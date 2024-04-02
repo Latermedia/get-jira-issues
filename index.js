@@ -68,12 +68,6 @@ axios.get(githubFullUrl, { headers: prHeaders })
 	  matches.forEach(match => jiraTicketSet.add(match));
     });
 
-    if (!Array.isArray(jiraTicketSet) || !jiraTicketSet.length){
-      console.log("There are no issues in the commits or PR Titles!");
-      console.log("NOTHING TO DO -- exiting no issues updated.");
-      process.exit(1);
-    }
-
 	jiraTicketSet.forEach(issue => {
 	  if (issue.match(excludeSprint)) {
 	    jiraTicketSet.delete(issue);
