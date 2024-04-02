@@ -94,10 +94,8 @@ axios.get(githubFullUrl, { headers: prHeaders })
     for (const jiraIssueID of jiraTickets) {
         try {
             const singleIssue = `${jiraIssueID}`;
-
-            const issue = await jira.findIssue(singleIssue);
+            const issue = jira.findIssue(singleIssue);
             projectKeyListDup.push(issue.fields.project.key);
-
         } catch (err) {
             console.error(err);
             process.exit(1);
@@ -108,10 +106,10 @@ axios.get(githubFullUrl, { headers: prHeaders })
     console.log("The unique Project key list:");
     console.log([...projectKeyList]);
 
-    const createProject = projectKeyList.map(async (jiraProjectKey) => {
+    const createProject = projectKeyList.map((jiraProjectKey) => {
         const singleKey = `${jiraProjectKey}`;
         try {
-            await jira.createVersion({
+            jira.createVersion({
                 name: releaseTitle,
                 project: singleKey,
                 description: fullDescription
@@ -122,39 +120,39 @@ axios.get(githubFullUrl, { headers: prHeaders })
             process.exit(1);
         }
     });
-    await Promise.all(createProject);
+    Promise.all(createProject);
 
     for (const jiraIssueID2 of jiraTickets) {
         try {
             const singleIssue2 = `${jiraIssueID2}`;
 
-            const jiraIssue2 = await jira.findIssue(singleIssue2);
+            const jiraIssue2 = jira.findIssue(singleIssue2);
             const projectKey = (jiraIssue2.fields.project.key);
 
             const releaseTitleA = {
                 name: releaseTitle
             }
 
-            await jira.updateIssue(singleIssue2, { fields: { fixVersions: [releaseTitleA] } });
+            jira.updateIssue(singleIssue2, { fields: { fixVersions: [releaseTitleA] } });
             console.log(`Fix Version updated: ${singleIssue2} to ${releaseTitle}`);
 
             if (projectKey === 'FRBI') {
-                const transitions = await jira.listTransitions(singleIssue2);
+                const transitions = jira.listTransitions(singleIssue2);
                 const filteredTransition = transitions.transitions.filter(t => t.name === 'Released');
 
                 const filterId = filteredTransition[0].id + "";
                 const transitionId = parseInt(filterId);
 
-                await jira.transitionIssue(singleIssue2, { transition: { id: transitionId } });
+                jira.transitionIssue(singleIssue2, { transition: { id: transitionId } });
                 console.log(`Issue ${singleIssue2} transitioned to Released.`);
             } else {
-                const transitions = await jira.listTransitions(singleIssue2);
+                const transitions = jira.listTransitions(singleIssue2);
                 const filteredTransition = transitions.transitions.filter(t => t.name === 'Closed');
 
                 const filterId = filteredTransition[0].id + "";
                 const transitionId = parseInt(filterId);
 
-                await jira.transitionIssue(singleIssue2, { transition: { id: transitionId } });
+                jira.transitionIssue(singleIssue2, { transition: { id: transitionId } });
                 console.log(`Issue ${singleIssue2} transitioned to Closed.`);
             }
 
@@ -163,7 +161,6 @@ axios.get(githubFullUrl, { headers: prHeaders })
             process.exit(1);
         }
     }
-
   })
   .catch(error => {
     console.error(`Error: ${error.message}`);
