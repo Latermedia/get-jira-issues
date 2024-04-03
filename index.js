@@ -54,7 +54,7 @@ async function getTickets() {
 
   const commitResponse = await axios.get(githubFullUrl, { headers: prHeaders });
 
-  return Promise.all([titleResponse, commitResponse]).then((values) => {
+  return await Promise.all([titleResponse, commitResponse]).then((values) => {
     let jiraTicketSet = new Set();
     const prTitleCheck = values[0].data.title.match(pattern);
     console.log("PR Title: " + prTitleCheck);
