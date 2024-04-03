@@ -117,7 +117,10 @@ async function filterTickets(titleTickets,commitTickets) {
 
 const titleTickets = titleQuery()
 const commitTickets = commitQuery()
-console.log(filterTickets(titleTickets,commitTickets));
+
+const jiraTicketSet = filterTickets(titleTickets, commitTickets)
+console.log(jiraTicketSet)
+
 // let jiraTicketSet = new Set(...titleRespone, ...commitResponse)
 // console.log(jiraTicketSet)
 
