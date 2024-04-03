@@ -49,7 +49,7 @@ if (!pullRequestNumber) {
   process.exit(1);
 }
 
-const titleTickets = async() => {
+const titleQuery = async() => {
   let titleResponse = await axios.get(githubPullFull, { headers: prHeaders });
   let jiraTicketSet = new Set();
   const prTitleCheck = titleResponse.data.title.match(pattern);
@@ -63,7 +63,7 @@ const titleTickets = async() => {
   return jiraTicketSet;
 };
 
-const commitTickets = async() => {
+const commitQuery = async() => {
   let jiraTicketSet = new Set();
   let commitResponse = await axios.get(githubFullUrl, { headers: prHeaders });
   let commitMessages = commitResponse.data.map((commit) => commit.commit.message);
@@ -81,8 +81,8 @@ const commitTickets = async() => {
 async function filterTickets(titleTickets,commitTickets) {
   let jiraTicketSet = new Set();
 
-  // console.log(...commitTickets)
-  console.log(...titleTickets)
+  console.log(commitTickets)
+  console.log(titleTickets)
 
   // return new Promise((jiraTicketSet) => {
   //   const excludeSprint = /Sprint-[0-9]+/gm;
@@ -114,7 +114,10 @@ async function filterTickets(titleTickets,commitTickets) {
 
   return "Hello";
 }
-console.log(filterTickets(titleTickets,commitTickets))
+
+const titleTickets = titleQuery()
+const commitTickets = commitQuery()
+console.log(filterTickets(titleTickets,commitTickets)
 // let jiraTicketSet = new Set(...titleRespone, ...commitResponse)
 // console.log(jiraTicketSet)
 
