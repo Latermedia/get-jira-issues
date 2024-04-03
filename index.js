@@ -49,7 +49,7 @@ if (!pullRequestNumber) {
   process.exit(1);
 }
 
-const titleQuery = async() => {
+const titleQuery = async () => {
   let titleResponse = await axios.get(githubPullFull, { headers: prHeaders });
   let jiraTicketSet = new Set();
   const prTitleCheck = titleResponse.data.title.match(pattern);
@@ -63,10 +63,12 @@ const titleQuery = async() => {
   return jiraTicketSet;
 };
 
-const commitQuery = async() => {
+const commitQuery = async () => {
   let jiraTicketSet = new Set();
   let commitResponse = await axios.get(githubFullUrl, { headers: prHeaders });
-  let commitMessages = commitResponse.data.map((commit) => commit.commit.message);
+  let commitMessages = commitResponse.data.map(
+    (commit) => commit.commit.message
+  );
 
   commitMessages.forEach((message) => {
     const matches = message.match(pattern);
@@ -76,129 +78,145 @@ const commitQuery = async() => {
   });
 
   return jiraTicketSet;
+};
+
+async function filterTickets(titleTickets, commitTickets) {
+  const jiratickets = Promise.all([titleTickets, commitTickets]).then(
+    (tickets) => {
+      let jiraTicketSet = new Set();
+      if (typeof tickets[0] !== "undefined") {
+        jiraTicketSet.add(...tickets[0]);
+      }
+
+      if (typeof tickets[1] !== "undefined") {
+        jiraTicketSet.add(...tickets[0]);
+      }
+
+      const excludeSprint = /Sprint-[0-9]+/gm;
+      const excludePe = /PE-[0-9]+/gm;
+
+      jiraTicketSet.forEach((issue) => {
+        if (issue.match(excludeSprint)) {
+          jiraTicketSet.delete(issue);
+        }
+      });
+
+      jiraTicketSet.forEach((issue) => {
+        if (issue.match(excludePe)) {
+          jiraTicketSet.delete(issue);
+        }
+      });
+
+      const jiraTickets = Array.from(jiraTicketSet);
+      console.log("List of Jira issues:");
+      console.log(...jiraTickets);
+
+      if (!Array.isArray(jiraTickets) || !jiraTickets.length) {
+        console.log("There are no issues in the commits or PR Titles!");
+        console.log("NOTHING TO DO -- exiting no issues updated.");
+        process.exit(1);
+      }
+
+      return jiraTicketSet;
+    }
+  );
+
+  return jiratickets;
 }
 
-async function filterTickets(titleTickets,commitTickets) {
-  let jiraTicketSet = new Set();
+const titleTickets = titleQuery();
+const commitTickets = commitQuery();
 
-  console.log(commitTickets)
-  console.log(titleTickets)
+const filterTicketSet = filterTickets(titleTickets, commitTickets);
 
-  // return new Promise((jiraTicketSet) => {
-  //   const excludeSprint = /Sprint-[0-9]+/gm;
-  //   const excludePe = /PE-[0-9]+/gm;
+filterTicketSet
+  .then((jiraTicketSet) => {
+    console.log("Filtered Tickets: ");
+    console.log(...jiraTicketSet);
 
-  //   console.log(jiraTicketSet);
-  //   jiraTicketSet.forEach((issue) => {
-  //     if (issue.match(excludeSprint)) {
-  //       jiraTicketSet.delete(issue);
-  //     }
-  //   });
+    const jiraTickets = Array.from(jiraTicketSet);
 
-  //   jiraTicketSet.forEach((issue) => {
-  //     if (issue.match(excludePe)) {
-  //       jiraTicketSet.delete(issue);
-  //     }
-  //   });
+    for (const jiraIssueID of jiraTickets) {
+      try {
+        const singleIssue = `${jiraIssueID}`;
+        const issue = jira.findIssue(singleIssue);
+        projectKeyListDup.push(issue.fields.project.key);
+      } catch (err) {
+        console.error(err);
+        process.exit(1);
+      }
+    }
 
-  //   const jiraTickets = Array.from(jiraTicketSet);
-  //   console.log("List of Jira issues:");
-  //   console.log(...jiraTickets);
+    let projectKeyList = [...new Set(projectKeyListDup)];
+    console.log("The unique Project key list:");
+    console.log([...projectKeyList]);
 
-  //   if (!Array.isArray(jiraTickets) || !jiraTickets.length) {
-  //     console.log("There are no issues in the commits or PR Titles!");
-  //     console.log("NOTHING TO DO -- exiting no issues updated.");
-  //     process.exit(1);
-  //   }
-  // }).then((tickets) => jiraTicketSet);
+    const createProject = projectKeyList.map((jiraProjectKey) => {
+      const singleKey = `${jiraProjectKey}`;
+      try {
+        jira.createVersion({
+          name: releaseTitle,
+          project: singleKey,
+          description: fullDescription,
+        });
+        console.log(`Project page created: ${singleKey}`);
+      } catch (err) {
+        console.error(err);
+        process.exit(1);
+      }
+    });
+    Promise.all(createProject);
 
-  return "Hello";
-}
+    for (const jiraIssueID2 of jiraTickets) {
+      try {
+        const singleIssue2 = `${jiraIssueID2}`;
 
-const titleTickets = await titleQuery()
-const commitTickets = await commitQuery()
+        const jiraIssue2 = jira.findIssue(singleIssue2);
+        const projectKey = jiraIssue2.fields.project.key;
 
-const jiraTicketSet = filterTickets(titleTickets, commitTickets)
-new Promise((jiraTicketSet) =>{
-  console.log(jiraTicketSet)
-})
+        const releaseTitleA = {
+          name: releaseTitle,
+        };
 
-// let jiraTicketSet = new Set(...titleRespone, ...commitResponse)
-// console.log(jiraTicketSet)
+        jira.updateIssue(singleIssue2, {
+          fields: { fixVersions: [releaseTitleA] },
+        });
+        console.log(`Fix Version updated: ${singleIssue2} to ${releaseTitle}`);
 
-//
-// for (const jiraIssueID of jiraTickets) {
-//   try {
-//     const singleIssue = `${jiraIssueID}`;
-//     const issue = jira.findIssue(singleIssue);
-//     projectKeyListDup.push(issue.fields.project.key);
-//   } catch (err) {
-//     console.error(err);
-//     process.exit(1);
-//   }
-// }
+        if (projectKey === "FRBI") {
+          const transitions = jira.listTransitions(singleIssue2);
+          const filteredTransition = transitions.transitions.filter(
+            (t) => t.name === "Released"
+          );
 
-// let projectKeyList = [...new Set(projectKeyListDup)];
-//   console.log("The unique Project key list:");
-//   console.log([...projectKeyList]);
+          const filterId = filteredTransition[0].id + "";
+          const transitionId = parseInt(filterId);
 
-//   const createProject = projectKeyList.map((jiraProjectKey) => {
-//       const singleKey = `${jiraProjectKey}`;
-//       try {
-//           jira.createVersion({
-//               name: releaseTitle,
-//               project: singleKey,
-//               description: fullDescription
-//           });
-//           console.log(`Project page created: ${singleKey}`);
-//       } catch (err) {
-//           console.error(err);
-//           process.exit(1);
-//       }
-//   });
-//   Promise.all(createProject);
+          jira.transitionIssue(singleIssue2, {
+            transition: { id: transitionId },
+          });
+          console.log(`Issue ${singleIssue2} transitioned to Released.`);
+        } else {
+          const transitions = jira.listTransitions(singleIssue2);
+          const filteredTransition = transitions.transitions.filter(
+            (t) => t.name === "Closed"
+          );
 
-//   for (const jiraIssueID2 of jiraTickets) {
-//       try {
-//           const singleIssue2 = `${jiraIssueID2}`;
+          const filterId = filteredTransition[0].id + "";
+          const transitionId = parseInt(filterId);
 
-//           const jiraIssue2 = jira.findIssue(singleIssue2);
-//           const projectKey = (jiraIssue2.fields.project.key);
-
-//           const releaseTitleA = {
-//               name: releaseTitle
-//           }
-
-//           jira.updateIssue(singleIssue2, { fields: { fixVersions: [releaseTitleA] } });
-//           console.log(`Fix Version updated: ${singleIssue2} to ${releaseTitle}`);
-
-//           if (projectKey === 'FRBI') {
-//               const transitions = jira.listTransitions(singleIssue2);
-//               const filteredTransition = transitions.transitions.filter(t => t.name === 'Released');
-
-//               const filterId = filteredTransition[0].id + "";
-//               const transitionId = parseInt(filterId);
-
-//               jira.transitionIssue(singleIssue2, { transition: { id: transitionId } });
-//               console.log(`Issue ${singleIssue2} transitioned to Released.`);
-//           } else {
-//               const transitions = jira.listTransitions(singleIssue2);
-//               const filteredTransition = transitions.transitions.filter(t => t.name === 'Closed');
-
-//               const filterId = filteredTransition[0].id + "";
-//               const transitionId = parseInt(filterId);
-
-//               jira.transitionIssue(singleIssue2, { transition: { id: transitionId } });
-//               console.log(`Issue ${singleIssue2} transitioned to Closed.`);
-//           }
-
-//       } catch (err) {
-//           console.error(err);
-//           process.exit(1);
-//       }
-//   }
-// })
-// .catch(error => {
-//   console.error(`Error: ${error.message}`);
-//   process.exit(1);
-// });
+          jira.transitionIssue(singleIssue2, {
+            transition: { id: transitionId },
+          });
+          console.log(`Issue ${singleIssue2} transitioned to Closed.`);
+        }
+      } catch (err) {
+        console.error(err);
+        process.exit(1);
+      }
+    }
+  })
+  .catch((error) => {
+    console.error(`Error: ${error.message}`);
+    process.exit(1);
+  });
