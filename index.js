@@ -54,7 +54,7 @@ async function getTickets() {
 
   const commitResponse = await axios.get(githubFullUrl, { headers: prHeaders });
 
-  return await Promise.all([titleResponse, commitResponse]).then((values) => {
+  const jiraTickets = await Promise.all([titleResponse, commitResponse]).then((values) => {
     let jiraTicketSet = new Set();
     const prTitleCheck = values[0].data.title.match(pattern);
     console.log("PR Title: " + prTitleCheck);
@@ -103,11 +103,13 @@ async function getTickets() {
     // return the ticket set in the promise
     jiraTicketSet;
   });
+
+  return jiraTickets; 
 }
 
-const jiraTickets = getTickets();
+const jiraTicket1 = getTickets();
 
-console.log(jiraTickets)
+console.log(jiraTickets1)
 
 // let jiraTicketSet = new Set(...titleRespone, ...commitResponse)
 // console.log(jiraTicketSet)
