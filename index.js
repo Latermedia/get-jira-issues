@@ -98,15 +98,11 @@ function getTickets() {
       console.log("NOTHING TO DO -- exiting no issues updated.");
       process.exit(1);
     }
-
-
-    // return the ticket set in the promise
-    jiraTicketSet;
   });
 }
 
-const jiraTicket1 = getTickets().then((tickets) => {
-  console.log(tickets)
+getTickets().then((jiraTicketSet) => {
+  console.log(jiraTicketSet)
 });
 // let jiraTicketSet = new Set(...titleRespone, ...commitResponse)
 // console.log(jiraTicketSet)
