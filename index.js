@@ -69,7 +69,9 @@ axios.get(githubFullUrl, { headers: prHeaders })
     console.log(commitMessages)
     commitMessages.forEach(message => {
       const matches = message.match(pattern);
-	    matches.forEach(match => jiraTicketSet.add(match));
+      if (matches.length > 0) {
+	      matches.forEach(match => jiraTicketSet.add(match));
+      }
     });
 
     console.log(jiraTicketSet)
