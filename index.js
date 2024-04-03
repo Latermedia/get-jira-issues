@@ -24,7 +24,6 @@ const releaseTitle = 'im-' + finalVersionNumber;
 const jiraUrlStrip = jiraBaseUrl.match(/https:\/\/(\S*)/);
 const jiraUrl = jiraUrlStrip[1];
 const pattern = /[a-zA-Z]{2,}-[0-9]+/gm;
-let jiraTicketSet = new Set();
 
 const prHeaders = {
   'Accept': 'application/vnd.github.v3+json',
@@ -50,30 +49,42 @@ if (!pullRequestNumber) {
     process.exit(1);
 }
 
-axios.get(githubFullUrl, { headers: prHeaders })
-  .then((prDataResponse) => {
-    const prTitleCheck = prDataResponse.data.title.match(pattern);
-    if (prTitleCheck) { 
-      jiraTicketSet.add(prTitleCheck[0]);
-      console.log("Added ticket from title to array: ");
-      console.log(...jiraTicketSet);
-    }
-
-    let commitMessages = prDataResponse.data.map(commit => commit.commit.message);
-    const excludeSprint = /Sprint-[0-9]+/gm;
-    const excludePe = /PE-[0-9]+/gm;
-
-    console.log(commitMessages)
-    commitMessages.forEach(message => {
-      const matches = message.match(pattern);
-      if (matches) {
-	      matches.forEach(match => jiraTicketSet.add(match));
+async function getTickets() {
+  let jiraTicketSet = new Set();
+  
+  const response1 = await axios.get(githubPullFull, { headers: prHeaders })
+    .then((prDataResponse1) => {
+      const prTitleCheck = prDataResponse1.data.title.match(pattern);
+      if (prTitleCheck) { 
+        jiraTicketSet.add(prTitleCheck[0]);
+        console.log("Added ticket from title to array: ");
+        console.log(...jiraTicketSet);
       }
     });
 
-    console.log("here")
-    console.log(jiraTicketSet)
+  const response2 = await axios.get(githubFullUrl, { headers: prHeaders })
+    .then((prDataResponse) => {
+      let commitMessages = prDataResponse.data.map(commit => commit.commit.message);
+      const excludeSprint = /Sprint-[0-9]+/gm;
+      const excludePe = /PE-[0-9]+/gm;
 
+      console.log(commitMessages)
+      commitMessages.forEach(message => {
+        const matches = message.match(pattern);
+        if (matches) {
+          matches.forEach(match => jiraTicketSet.add(match));
+        }
+      });
+
+      console.log("here")
+      console.log(jiraTicketSet)
+    });
+
+    return jiraTicketSet
+}
+
+const jiraTicketSet = getTickets();
+console.log(jiraTicketSet)
 	// jiraTicketSet.forEach(issue => {
 	//   if (issue.match(excludeSprint)) {
 	//     jiraTicketSet.delete(issue);
