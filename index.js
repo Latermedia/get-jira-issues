@@ -87,8 +87,22 @@ async function getTickets() {
 
 
 getTickets().then((titleRespone, commitResponse) => {
-  console.log("title: " + titleRespone);
-  console.log("commit: " + commitResponse);
+  let jiraTicketSet = new Set();
+  
+  if (titleRespone) {
+    console.log("title: ");
+    console.log(titleRespone);
+    jiraTicketSet.add(...titleRespone)
+  }
+  
+  if (commitResponse) {
+    console.log("commit: ");
+    console.log(commitResponse);
+    jiraTicketSet.add(...commitResponse)
+  }
+
+  console.log(...jiraTicketSet)
+  
 });
 // let jiraTicketSet = new Set(...titleRespone, ...commitResponse)
 // console.log(jiraTicketSet)
