@@ -81,7 +81,7 @@ const commitTickets = async() => {
 async function filterTickets(titleTickets,commitTickets) {
   let jiraTicketSet = new Set();
 
-  console.log(...commitTickets)
+  // console.log(...commitTickets)
   console.log(...titleTickets)
 
   // return new Promise((jiraTicketSet) => {
