@@ -49,8 +49,9 @@ if (!pullRequestNumber) {
     process.exit(1);
 }
 
-async function getTickets() {
-  const titleRespone = await axios.get(githubPullFull, { headers: prHeaders })
+function getTickets() {
+  const prDataResponse1 = axios.get(githubPullFull, { headers: prHeaders })
+  const titleRespone = prDataResponse1.then()
     .then((prDataResponse1) => {
       let titleTicketSet = new Set();
       const prTitleCheck = prDataResponse1.data.title.match(pattern);
@@ -59,11 +60,11 @@ async function getTickets() {
         console.log("Added ticket from title to array: ");
         console.log(...titleTicketSet);
       }
-      return titleTicketSet
+      titleTicketSet;
     });
 
-  const commitResponse = await axios.get(githubFullUrl, { headers: prHeaders })
-    .then((prDataResponse) => {
+  const prDataResponse = axios.get(githubFullUrl, { headers: prHeaders })
+  const commitResponse = prDataResponse.then((prDataResponse) => {
       let commitTicketSet = new Set();
       let commitMessages = prDataResponse.data.map(commit => commit.commit.message);
       const excludeSprint = /Sprint-[0-9]+/gm;
@@ -79,7 +80,7 @@ async function getTickets() {
 
       console.log("here")
       console.log(...commitTicketSet)
-      return commitTicketSet
+      commitTicketSet;
     });
 
     return titleRespone, commitResponse;
