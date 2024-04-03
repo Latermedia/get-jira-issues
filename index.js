@@ -115,8 +115,8 @@ async function filterTickets(titleTickets,commitTickets) {
   return "Hello";
 }
 
-const titleTickets = titleQuery()
-const commitTickets = commitQuery()
+const titleTickets = await titleQuery()
+const commitTickets = await commitQuery()
 
 const jiraTicketSet = filterTickets(titleTickets, commitTickets)
 new Promise((jiraTicketSet) =>{
