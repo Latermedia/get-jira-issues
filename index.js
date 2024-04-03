@@ -49,12 +49,12 @@ if (!pullRequestNumber) {
   process.exit(1);
 }
 
-async function getTickets() {
-  const titleResponse = await axios.get(githubPullFull, { headers: prHeaders });
+function getTickets() {
+  const titleResponse = axios.get(githubPullFull, { headers: prHeaders });
 
-  const commitResponse = await axios.get(githubFullUrl, { headers: prHeaders });
+  const commitResponse = axios.get(githubFullUrl, { headers: prHeaders });
 
-  const jiraTickets = await Promise.all([titleResponse, commitResponse]).then((values) => {
+  return Promise.all([titleResponse, commitResponse]).then((values) => {
     let jiraTicketSet = new Set();
     const prTitleCheck = values[0].data.title.match(pattern);
     console.log("PR Title: " + prTitleCheck);
@@ -103,14 +103,11 @@ async function getTickets() {
     // return the ticket set in the promise
     jiraTicketSet;
   });
-
-  return jiraTickets; 
 }
 
-const jiraTicket1 = getTickets();
-
-console.log(jiraTickets1)
-
+const jiraTicket1 = getTickets().then((tickets) => {
+  console.log(tickets)
+});
 // let jiraTicketSet = new Set(...titleRespone, ...commitResponse)
 // console.log(jiraTicketSet)
 
