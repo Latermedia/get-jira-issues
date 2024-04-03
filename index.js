@@ -52,117 +52,119 @@ if (!pullRequestNumber) {
 
 axios.get(githubPullFull, { headers: prHeaders })
   .then((prDataResponse1) => {
-  const prTitleCheck = prDataResponse1.data.title.match(pattern);
-  jiraTicketSet.add(prTitleCheck[0]);
-  console.log("Added ticket from title to array: ");
-  console.log(...jiraTicketSet);
+    const title1 = prDataResponse1.data.title
+    console.log(title1)
+    // const prTitleCheck = prDataResponse1.data.title.match(pattern);
+    // jiraTicketSet.add(prTitleCheck[0]);
+    // console.log("Added ticket from title to array: ");
+    // console.log(...jiraTicketSet);
   });
 
-axios.get(githubFullUrl, { headers: prHeaders })
-  .then((prDataResponse) => {
-    let commitMessages = prDataResponse.data.map(commit => commit.commit.message);
-    const excludeSprint = /Sprint-[0-9]+/gm;
-    const excludePe = /PE-[0-9]+/gm;
+// axios.get(githubFullUrl, { headers: prHeaders })
+//   .then((prDataResponse) => {
+//     let commitMessages = prDataResponse.data.map(commit => commit.commit.message);
+//     const excludeSprint = /Sprint-[0-9]+/gm;
+//     const excludePe = /PE-[0-9]+/gm;
 
-    commitMessages.forEach(message => {
-      const matches = message.match(pattern);
-	  matches.forEach(match => jiraTicketSet.add(match));
-    });
+//     commitMessages.forEach(message => {
+//       const matches = message.match(pattern);
+// 	  matches.forEach(match => jiraTicketSet.add(match));
+//     });
 
-	jiraTicketSet.forEach(issue => {
-	  if (issue.match(excludeSprint)) {
-	    jiraTicketSet.delete(issue);
-	  }
-	});
+// 	jiraTicketSet.forEach(issue => {
+// 	  if (issue.match(excludeSprint)) {
+// 	    jiraTicketSet.delete(issue);
+// 	  }
+// 	});
 
-    jiraTicketSet.forEach(issue => {
-	  if (issue.match(excludePe)) {
-	    jiraTicketSet.delete(issue);
-	  }
-	});
+//     jiraTicketSet.forEach(issue => {
+// 	  if (issue.match(excludePe)) {
+// 	    jiraTicketSet.delete(issue);
+// 	  }
+// 	});
 
-    const jiraTickets = Array.from(jiraTicketSet);
-    console.log("List of Jira issues:");
-    console.log(...jiraTickets);
+//     const jiraTickets = Array.from(jiraTicketSet);
+//     console.log("List of Jira issues:");
+//     console.log(...jiraTickets);
 
-    if (!Array.isArray(jiraTickets) || !jiraTickets.length){
-          console.log("There are no issues in the commits or PR Titles!");
-          console.log("NOTHING TO DO -- exiting no issues updated.");
-          process.exit(1);
-        }
+//     if (!Array.isArray(jiraTickets) || !jiraTickets.length){
+//           console.log("There are no issues in the commits or PR Titles!");
+//           console.log("NOTHING TO DO -- exiting no issues updated.");
+//           process.exit(1);
+//         }
 
-    for (const jiraIssueID of jiraTickets) {
-        try {
-            const singleIssue = `${jiraIssueID}`;
-            const issue = jira.findIssue(singleIssue);
-            projectKeyListDup.push(issue.fields.project.key);
-        } catch (err) {
-            console.error(err);
-            process.exit(1);
-        }
-    }
+//     for (const jiraIssueID of jiraTickets) {
+//         try {
+//             const singleIssue = `${jiraIssueID}`;
+//             const issue = jira.findIssue(singleIssue);
+//             projectKeyListDup.push(issue.fields.project.key);
+//         } catch (err) {
+//             console.error(err);
+//             process.exit(1);
+//         }
+//     }
 
-	let projectKeyList = [...new Set(projectKeyListDup)];
-    console.log("The unique Project key list:");
-    console.log([...projectKeyList]);
+// 	let projectKeyList = [...new Set(projectKeyListDup)];
+//     console.log("The unique Project key list:");
+//     console.log([...projectKeyList]);
 
-    const createProject = projectKeyList.map((jiraProjectKey) => {
-        const singleKey = `${jiraProjectKey}`;
-        try {
-            jira.createVersion({
-                name: releaseTitle,
-                project: singleKey,
-                description: fullDescription
-            });
-            console.log(`Project page created: ${singleKey}`);
-        } catch (err) {
-            console.error(err);
-            process.exit(1);
-        }
-    });
-    Promise.all(createProject);
+//     const createProject = projectKeyList.map((jiraProjectKey) => {
+//         const singleKey = `${jiraProjectKey}`;
+//         try {
+//             jira.createVersion({
+//                 name: releaseTitle,
+//                 project: singleKey,
+//                 description: fullDescription
+//             });
+//             console.log(`Project page created: ${singleKey}`);
+//         } catch (err) {
+//             console.error(err);
+//             process.exit(1);
+//         }
+//     });
+//     Promise.all(createProject);
 
-    for (const jiraIssueID2 of jiraTickets) {
-        try {
-            const singleIssue2 = `${jiraIssueID2}`;
+//     for (const jiraIssueID2 of jiraTickets) {
+//         try {
+//             const singleIssue2 = `${jiraIssueID2}`;
 
-            const jiraIssue2 = jira.findIssue(singleIssue2);
-            const projectKey = (jiraIssue2.fields.project.key);
+//             const jiraIssue2 = jira.findIssue(singleIssue2);
+//             const projectKey = (jiraIssue2.fields.project.key);
 
-            const releaseTitleA = {
-                name: releaseTitle
-            }
+//             const releaseTitleA = {
+//                 name: releaseTitle
+//             }
 
-            jira.updateIssue(singleIssue2, { fields: { fixVersions: [releaseTitleA] } });
-            console.log(`Fix Version updated: ${singleIssue2} to ${releaseTitle}`);
+//             jira.updateIssue(singleIssue2, { fields: { fixVersions: [releaseTitleA] } });
+//             console.log(`Fix Version updated: ${singleIssue2} to ${releaseTitle}`);
 
-            if (projectKey === 'FRBI') {
-                const transitions = jira.listTransitions(singleIssue2);
-                const filteredTransition = transitions.transitions.filter(t => t.name === 'Released');
+//             if (projectKey === 'FRBI') {
+//                 const transitions = jira.listTransitions(singleIssue2);
+//                 const filteredTransition = transitions.transitions.filter(t => t.name === 'Released');
 
-                const filterId = filteredTransition[0].id + "";
-                const transitionId = parseInt(filterId);
+//                 const filterId = filteredTransition[0].id + "";
+//                 const transitionId = parseInt(filterId);
 
-                jira.transitionIssue(singleIssue2, { transition: { id: transitionId } });
-                console.log(`Issue ${singleIssue2} transitioned to Released.`);
-            } else {
-                const transitions = jira.listTransitions(singleIssue2);
-                const filteredTransition = transitions.transitions.filter(t => t.name === 'Closed');
+//                 jira.transitionIssue(singleIssue2, { transition: { id: transitionId } });
+//                 console.log(`Issue ${singleIssue2} transitioned to Released.`);
+//             } else {
+//                 const transitions = jira.listTransitions(singleIssue2);
+//                 const filteredTransition = transitions.transitions.filter(t => t.name === 'Closed');
 
-                const filterId = filteredTransition[0].id + "";
-                const transitionId = parseInt(filterId);
+//                 const filterId = filteredTransition[0].id + "";
+//                 const transitionId = parseInt(filterId);
 
-                jira.transitionIssue(singleIssue2, { transition: { id: transitionId } });
-                console.log(`Issue ${singleIssue2} transitioned to Closed.`);
-            }
+//                 jira.transitionIssue(singleIssue2, { transition: { id: transitionId } });
+//                 console.log(`Issue ${singleIssue2} transitioned to Closed.`);
+//             }
 
-        } catch (err) {
-            console.error(err);
-            process.exit(1);
-        }
-    }
-  })
-  .catch(error => {
-    console.error(`Error: ${error.message}`);
-    process.exit(1);
-  });
+//         } catch (err) {
+//             console.error(err);
+//             process.exit(1);
+//         }
+//     }
+//   })
+//   .catch(error => {
+//     console.error(`Error: ${error.message}`);
+//     process.exit(1);
+//   });
