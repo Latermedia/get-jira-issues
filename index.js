@@ -82,18 +82,14 @@ async function getTickets() {
       return commitTicketSet
     });
 
-
-    console.log("Commit: " + commitResponse);
-    console.log("Title: " + titleRespone)
-
-    let jiraTicketSet = new Set(...titleRespone, ...commitResponse)
-    console.log(jiraTicketSet)
-    return jiraTicketSet
+    return titleRespone, commitResponse;
 }
 
 
-const tickets = getTickets()
-console.log(tickets)
+getTickets().then((titleRespone, commitResponse) => {
+  console.log("title: " + titleRespone);
+  console.log("commit: " + commitResponse);
+});
 // let jiraTicketSet = new Set(...titleRespone, ...commitResponse)
 // console.log(jiraTicketSet)
 	// jiraTicketSet.forEach(issue => {
