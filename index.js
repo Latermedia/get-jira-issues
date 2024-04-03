@@ -119,7 +119,9 @@ const titleTickets = titleQuery()
 const commitTickets = commitQuery()
 
 const jiraTicketSet = filterTickets(titleTickets, commitTickets)
-console.log(jiraTicketSet)
+new Promise((jiraTicketSet) =>{
+  console.log(jiraTicketSet)
+})
 
 // let jiraTicketSet = new Set(...titleRespone, ...commitResponse)
 // console.log(jiraTicketSet)
