@@ -53,7 +53,7 @@ if (!pullRequestNumber) {
 axios.get(githubPullFull, { headers: prHeaders })
   .then((prDataResponse1) => {
     const prTitleCheck = prDataResponse1.data.title.match(pattern);
-    if (prTitleCheck.length > 0) { 
+    if (prTitleCheck) { 
       jiraTicketSet.add(prTitleCheck[0]);
       console.log("Added ticket from title to array: ");
       console.log(...jiraTicketSet);
@@ -69,7 +69,7 @@ axios.get(githubFullUrl, { headers: prHeaders })
     console.log(commitMessages)
     commitMessages.forEach(message => {
       const matches = message.match(pattern);
-      if (matches.length > 0) {
+      if (matches) {
 	      matches.forEach(match => jiraTicketSet.add(match));
       }
     });
