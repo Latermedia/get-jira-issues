@@ -105,9 +105,7 @@ async function getTickets() {
   });
 }
 
-const jiraTickets = getTickets().then((tickets) => {
-  console.log(tickets)
-});
+const jiraTickets = getTickets();
 
 console.log(jiraTickets)
 
