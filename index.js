@@ -74,6 +74,7 @@ axios.get(githubFullUrl, { headers: prHeaders })
       }
     });
 
+    console.log("here")
     console.log(jiraTicketSet)
 
 	// jiraTicketSet.forEach(issue => {
