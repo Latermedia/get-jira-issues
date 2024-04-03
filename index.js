@@ -91,16 +91,17 @@ getTickets().then((titleRespone, commitResponse) => {
   
   if (titleRespone) {
     console.log("title: ");
-    console.log(titleRespone);
+    console.log(...titleRespone);
     jiraTicketSet.add(...titleRespone)
   }
   
   if (commitResponse) {
     console.log("commit: ");
-    console.log(commitResponse);
+    console.log(...commitResponse);
     jiraTicketSet.add(...commitResponse)
   }
 
+  console.log("Jira Tickets: ")
   console.log(...jiraTicketSet)
   
 });
