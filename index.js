@@ -78,7 +78,7 @@ const commitTickets = async() => {
   return jiraTicketSet;
 }
 
-function filterTickets(titleTickets,commitTickets) {
+async function filterTickets(titleTickets,commitTickets) {
   let jiraTicketSet = new Set();
 
   console.log(commitTickets)
@@ -111,6 +111,8 @@ function filterTickets(titleTickets,commitTickets) {
   //     process.exit(1);
   //   }
   // }).then((tickets) => jiraTicketSet);
+
+  return "Hello";
 }
 console.log(filterTickets(titleTickets,commitTickets))
 // let jiraTicketSet = new Set(...titleRespone, ...commitResponse)
