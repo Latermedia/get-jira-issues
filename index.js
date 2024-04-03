@@ -78,7 +78,7 @@ const commitResponse = axios.get(githubFullUrl, { headers: prHeaders })
     });
 
     console.log("here")
-    console.log(...jiraTicketSet)
+    console.log(...commitTicketSet)
     return commitTicketSet
   });
 
