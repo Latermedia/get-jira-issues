@@ -49,42 +49,51 @@ if (!pullRequestNumber) {
     process.exit(1);
 }
 
- 
-const titleRespone = axios.get(githubPullFull, { headers: prHeaders })
-  .then((prDataResponse1) => {
-    let titleTicketSet = new Set();
-    const prTitleCheck = prDataResponse1.data.title.match(pattern);
-    if (prTitleCheck) { 
-      titleTicketSet.add(prTitleCheck[0]);
-      console.log("Added ticket from title to array: ");
-      console.log(...titleTicketSet);
-    }
-    return titleTicketSet
-  });
-
-const commitResponse = axios.get(githubFullUrl, { headers: prHeaders })
-  .then((prDataResponse) => {
-    let commitTicketSet = new Set();
-    let commitMessages = prDataResponse.data.map(commit => commit.commit.message);
-    const excludeSprint = /Sprint-[0-9]+/gm;
-    const excludePe = /PE-[0-9]+/gm;
-
-    console.log(commitMessages)
-    commitMessages.forEach(message => {
-      const matches = message.match(pattern);
-      if (matches) {
-        matches.forEach(match => commitTicketSet.add(match));
+async function getTickets() {
+  const titleRespone = await axios.get(githubPullFull, { headers: prHeaders })
+    .then((prDataResponse1) => {
+      let titleTicketSet = new Set();
+      const prTitleCheck = prDataResponse1.data.title.match(pattern);
+      if (prTitleCheck) { 
+        titleTicketSet.add(prTitleCheck[0]);
+        console.log("Added ticket from title to array: ");
+        console.log(...titleTicketSet);
       }
+      return titleTicketSet
     });
 
-    console.log("here")
-    console.log(...commitTicketSet)
-    return commitTicketSet
-  });
+  const commitResponse = await axios.get(githubFullUrl, { headers: prHeaders })
+    .then((prDataResponse) => {
+      let commitTicketSet = new Set();
+      let commitMessages = prDataResponse.data.map(commit => commit.commit.message);
+      const excludeSprint = /Sprint-[0-9]+/gm;
+      const excludePe = /PE-[0-9]+/gm;
+
+      console.log(commitMessages)
+      commitMessages.forEach(message => {
+        const matches = message.match(pattern);
+        if (matches) {
+          matches.forEach(match => commitTicketSet.add(match));
+        }
+      });
+
+      console.log("here")
+      console.log(...commitTicketSet)
+      return commitTicketSet
+    });
 
 
-console.log("Commit: " + commitResponse);
-console.log("Title: " + titleRespone)
+    console.log("Commit: " + commitResponse);
+    console.log("Title: " + titleRespone)
+
+    let jiraTicketSet = new Set(...titleRespone, ...commitResponse)
+    console.log(jiraTicketSet)
+    return jiraTicketSet
+}
+
+
+const tickets = getTickets()
+console.log(tickets)
 // let jiraTicketSet = new Set(...titleRespone, ...commitResponse)
 // console.log(jiraTicketSet)
 	// jiraTicketSet.forEach(issue => {
