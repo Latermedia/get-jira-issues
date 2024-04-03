@@ -66,9 +66,10 @@ axios.get(githubFullUrl, { headers: prHeaders })
     const excludeSprint = /Sprint-[0-9]+/gm;
     const excludePe = /PE-[0-9]+/gm;
 
+    console.log(commitMessages)
     commitMessages.forEach(message => {
       const matches = message.match(pattern);
-	  matches.forEach(match => jiraTicketSet.add(match));
+	    matches.forEach(match => jiraTicketSet.add(match));
     });
 
     console.log(jiraTicketSet)
