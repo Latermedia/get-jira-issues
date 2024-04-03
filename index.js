@@ -53,7 +53,12 @@ if (!pullRequestNumber) {
 axios.get(githubPullFull, { headers: prHeaders })
   .then((prDataResponse1) => {
     const title1 = prDataResponse1.data.title
-    console.log(title1)
+    console.log(title1);
+    if (title1.match(pattern)) {
+      console.log("yep");
+    } else {
+      console.log(pattern)
+    }
     // const prTitleCheck = prDataResponse1.data.title.match(pattern);
     // jiraTicketSet.add(prTitleCheck[0]);
     // console.log("Added ticket from title to array: ");
