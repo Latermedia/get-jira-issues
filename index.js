@@ -50,7 +50,7 @@ if (!pullRequestNumber) {
 }
 
  
-const titleRespone = await axios.get(githubPullFull, { headers: prHeaders })
+const titleRespone = axios.get(githubPullFull, { headers: prHeaders })
   .then((prDataResponse1) => {
     let titleTicketSet = new Set();
     const prTitleCheck = prDataResponse1.data.title.match(pattern);
@@ -62,7 +62,7 @@ const titleRespone = await axios.get(githubPullFull, { headers: prHeaders })
     return titleTicketSet
   });
 
-const commitResponse = await axios.get(githubFullUrl, { headers: prHeaders })
+const commitResponse = axios.get(githubFullUrl, { headers: prHeaders })
   .then((prDataResponse) => {
     let commitTicketSet = new Set();
     let commitMessages = prDataResponse.data.map(commit => commit.commit.message);
