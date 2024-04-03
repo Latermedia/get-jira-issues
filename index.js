@@ -49,61 +49,70 @@ if (!pullRequestNumber) {
   process.exit(1);
 }
 
-function getTickets() {
-  const titleResponse = axios.get(githubPullFull, { headers: prHeaders });
+const titleTickets = async() => {
+  let titleResponse = await axios.get(githubPullFull, { headers: prHeaders });
+  let jiraTicketSet = new Set();
+  const prTitleCheck = titleResponse.data.title.match(pattern);
+  console.log("PR Title: " + prTitleCheck);
+  if (prTitleCheck) {
+    jiraTicketSet.add(prTitleCheck[0]);
+    console.log("Added ticket from title to array: ");
+    console.log(...jiraTicketSet);
+  }
 
-  const commitResponse = axios.get(githubFullUrl, { headers: prHeaders });
+  return jiraTicketSet;
+};
 
-  return Promise.all([titleResponse, commitResponse]).then((values) => {
-    let jiraTicketSet = new Set();
-    const prTitleCheck = values[0].data.title.match(pattern);
-    console.log("PR Title: " + prTitleCheck);
-    if (prTitleCheck) {
-      jiraTicketSet.add(prTitleCheck[0]);
-      console.log("Added ticket from title to array: ");
-      console.log(...jiraTicketSet);
-    }
+const commitTickets = async() => {
+  let jiraTicketSet = new Set();
+  let commitResponse = await axios.get(githubFullUrl, { headers: prHeaders });
+  let commitMessages = commitResponse.data.map((commit) => commit.commit.message);
 
-    let commitMessages = values[1].data.map((commit) => commit.commit.message);
-    const excludeSprint = /Sprint-[0-9]+/gm;
-    const excludePe = /PE-[0-9]+/gm;
-
-    console.log(commitMessages);
-    commitMessages.forEach((message) => {
-      const matches = message.match(pattern);
-      if (matches) {
-        matches.forEach((match) => jiraTicketSet.add(match));
-      }
-    });
-
-    console.log(jiraTicketSet);
-    jiraTicketSet.forEach((issue) => {
-      if (issue.match(excludeSprint)) {
-        jiraTicketSet.delete(issue);
-      }
-    });
-
-    jiraTicketSet.forEach((issue) => {
-      if (issue.match(excludePe)) {
-        jiraTicketSet.delete(issue);
-      }
-    });
-
-    const jiraTickets = Array.from(jiraTicketSet);
-    console.log("List of Jira issues:");
-    console.log(...jiraTickets);
-
-    if (!Array.isArray(jiraTickets) || !jiraTickets.length) {
-      console.log("There are no issues in the commits or PR Titles!");
-      console.log("NOTHING TO DO -- exiting no issues updated.");
-      process.exit(1);
+  commitMessages.forEach((message) => {
+    const matches = message.match(pattern);
+    if (matches) {
+      matches.forEach((match) => jiraTicketSet.add(match));
     }
   });
+
+  return jiraTicketSet;
 }
 
-getTickets().then((jiraTicketSet) => {
-  console.log(jiraTicketSet)
-});
+function filterTickets(titleTickets,commitTickets) {
+  let jiraTicketSet = new Set();
+
+  console.log(commitTickets)
+  console.log(titleTickets)
+
+  // return new Promise((jiraTicketSet) => {
+  //   const excludeSprint = /Sprint-[0-9]+/gm;
+  //   const excludePe = /PE-[0-9]+/gm;
+
+  //   console.log(jiraTicketSet);
+  //   jiraTicketSet.forEach((issue) => {
+  //     if (issue.match(excludeSprint)) {
+  //       jiraTicketSet.delete(issue);
+  //     }
+  //   });
+
+  //   jiraTicketSet.forEach((issue) => {
+  //     if (issue.match(excludePe)) {
+  //       jiraTicketSet.delete(issue);
+  //     }
+  //   });
+
+  //   const jiraTickets = Array.from(jiraTicketSet);
+  //   console.log("List of Jira issues:");
+  //   console.log(...jiraTickets);
+
+  //   if (!Array.isArray(jiraTickets) || !jiraTickets.length) {
+  //     console.log("There are no issues in the commits or PR Titles!");
+  //     console.log("NOTHING TO DO -- exiting no issues updated.");
+  //     process.exit(1);
+  //   }
+  // }).then((tickets) => jiraTicketSet);
+}
+console.log(filterTickets(titleTickets,commitTickets))
 // let jiraTicketSet = new Set(...titleRespone, ...commitResponse)
 // console.log(jiraTicketSet)
 
