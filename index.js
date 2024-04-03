@@ -82,8 +82,11 @@ const commitResponse = axios.get(githubFullUrl, { headers: prHeaders })
     return commitTicketSet
   });
 
-let jiraTicketSet = new Set(...titleRespone, ...commitResponse)
-console.log(jiraTicketSet)
+
+console.log("Commit: " + commitResponse);
+console.log("Title: " + titleRespone)
+// let jiraTicketSet = new Set(...titleRespone, ...commitResponse)
+// console.log(jiraTicketSet)
 	// jiraTicketSet.forEach(issue => {
 	//   if (issue.match(excludeSprint)) {
 	//     jiraTicketSet.delete(issue);
