@@ -81,8 +81,8 @@ const commitTickets = async() => {
 async function filterTickets(titleTickets,commitTickets) {
   let jiraTicketSet = new Set();
 
-  console.log(commitTickets)
-  console.log(titleTickets)
+  console.log(...commitTickets)
+  console.log(...titleTickets)
 
   // return new Promise((jiraTicketSet) => {
   //   const excludeSprint = /Sprint-[0-9]+/gm;
