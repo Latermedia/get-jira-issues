@@ -54,8 +54,10 @@ axios.get(githubPullFull, { headers: prHeaders })
   .then((prDataResponse1) => {
     const title1 = prDataResponse1.data.title
     console.log(title1);
-    if (title1.match(pattern)) {
+    const matches = title1.match(pattern)
+    if (matches.length > 0) {
       console.log("yep");
+      console.log(matches[0])
     } else {
       console.log(pattern)
     }
