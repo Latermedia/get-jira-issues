@@ -99,16 +99,6 @@ async function getTickets() {
       process.exit(1);
     }
 
-    for (const jiraIssueID of jiraTickets) {
-      try {
-        const singleIssue = `${jiraIssueID}`;
-        const issue = jira.findIssue(singleIssue);
-        projectKeyListDup.push(issue.fields.project.key);
-      } catch (err) {
-        console.error(err);
-        process.exit(1);
-      }
-    }
 
     // return the ticket set in the promise
     jiraTicketSet;
@@ -119,9 +109,22 @@ const jiraTickets = getTickets().then((tickets) => {
   console.log(tickets)
 });
 
+console.log(jiraTickets)
 
 // let jiraTicketSet = new Set(...titleRespone, ...commitResponse)
 // console.log(jiraTicketSet)
+
+//
+// for (const jiraIssueID of jiraTickets) {
+//   try {
+//     const singleIssue = `${jiraIssueID}`;
+//     const issue = jira.findIssue(singleIssue);
+//     projectKeyListDup.push(issue.fields.project.key);
+//   } catch (err) {
+//     console.error(err);
+//     process.exit(1);
+//   }
+// }
 
 // let projectKeyList = [...new Set(projectKeyListDup)];
 //   console.log("The unique Project key list:");
