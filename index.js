@@ -179,17 +179,16 @@ async function changeState(singleIssue, state) {
   }
 }
 
-const titleTickets = await titleQuery();
-const commitTickets = await commitQuery();
-const filterTicketSet = await filterTickets(titleTickets, commitTickets);
+async function main() {
+  try {
+    const titleTickets = await titleQuery();
+    const commitTickets = await commitQuery();
+    const filterTicketSet = await filterTickets(titleTickets, commitTickets);
 
-
-filterTicketSet
-  .then(async (jiraTickets) => {
     console.log("Filtered Tickets: ");
-    console.log(...jiraTickets);
+    console.log(...filterTicketSet);
 
-    for (const jiraIssueID of jiraTickets) {
+    for (const jiraIssueID of filterTicketSet) {
       try {
         const singleIssue = `${jiraIssueID}`;
         const issue = await jira.findIssue(singleIssue);
@@ -227,13 +226,14 @@ filterTicketSet
         }
 
         await changeState(singleIssue, state);
-
       } catch (error) {
         console.error(`Error processing ticket ${jiraIssueID}: ${error.message}`);
       }
     }
-  })
-  .catch((error) => {
+  } catch (error) {
     console.error(`Error: ${error.message}`);
     process.exit(1);
-  });
+  }
+}
+
+main();
