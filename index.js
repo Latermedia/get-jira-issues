@@ -179,9 +179,9 @@ async function changeState(singleIssue, state) {
   }
 }
 
-const titleTickets = titleQuery();
-const commitTickets = commitQuery();
-const filterTicketSet = filterTickets(titleTickets, commitTickets);
+const titleTickets = await titleQuery();
+const commitTickets = await commitQuery();
+const filterTicketSet = await filterTickets(titleTickets, commitTickets);
 
 
 filterTicketSet
