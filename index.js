@@ -174,49 +174,54 @@ const titleTickets = titleQuery();
 const commitTickets = commitQuery();
 const filterTicketSet = filterTickets(titleTickets, commitTickets);
 
-Promise.all(filterTicketSet.map(async (jiraIssueID) => {
-  try {
-    const singleIssue = jiraIssueID;
-    const issue = await jira.findIssue(singleIssue);
-    const projectKey = issue.fields.project.key;
+filterTicketSet
+  .then((jiraTickets) => {
+    console.log("Filtered Tickets: ");
+    console.log(...jiraTickets);
 
-    console.log(projectKey);
+    for (const jiraIssueID of jiraTickets) {
+      const singleIssue = `${jiraIssueID}`;
+      const issue = await jira.findIssue(singleIssue);
+      const projectKey = issue.fields.project.key;
 
-    const releaseTitleA = {
-      name: releaseTitle,
-    };
+      console.log(projectKey);
 
-    await jira.createVersion({
-      name: releaseTitle,
-      project: projectKey,
-      description: fullDescription,
-    }).then((e) => {
-      console.log(`Project created ${projectKey}`);
-    }).catch((e) => {
-      console.log("Release page already exists");
-    });
+      const releaseTitleA = {
+        name: releaseTitle,
+      };
 
-    await jira.updateIssue(singleIssue, {
-      fields: { fixVersions: [releaseTitleA] },
-    }).then((update) => {
-      console.log(`Fix Version updated: ${singleIssue} to ${releaseTitle}`);
-    });
+      await jira.createVersion({
+        name: releaseTitle,
+        project: projectKey,
+        description: fullDescription,
+      }).then((e) => {
+        console.log(`Project created ${projectKey}`);
+      }).catch((e) => {
+        console.log("Release page already exists");
+      });
 
-    let state = "";
-    if (projectKey === "FRBI") {
-      state = "Released";
-    } else if (projectKey === "OTEST") {
-      state = "Done";
-    } else {
-      state = "Closed";
+      await jira.updateIssue(singleIssue, {
+        fields: { fixVersions: [releaseTitleA] },
+      }).then((update) => {
+        console.log(`Fix Version updated: ${singleIssue} to ${releaseTitle}`);
+      });
+
+      let state = "";
+      if (projectKey === "FRBI") {
+        state = "Released";
+      } else if (projectKey === "OTEST") {
+        state = "Done";
+      } else {
+        state = "Closed";
+      }
+
+      await changeState(singleIssue, state);
+
+    } catch (error) {
+       console.error(`Error processing ticket ${jiraIssueID}: ${error.message}`);
     }
-
-    await changeState(singleIssue, state);
-
-  } catch (error) {
-    console.error(`Error processing ticket ${jiraIssueID}: ${error.message}`);
-  }
-})).catch((error) => {
-  console.error(`Error: ${error.message}`);
-  process.exit(1);
-});
+  })
+  .catch((error) => {
+    console.error(`Error: ${error.message}`);
+    process.exit(1);
+  });
