@@ -170,11 +170,9 @@ async function changeState(singleIssue, state) {
   }
 }
 
-
-const titleTickets = await titleQuery();
-const commitTickets = await commitQuery();
-const filterTicketSet = await filterTickets(titleTickets, commitTickets);
-
+const titleTickets = titleQuery();
+const commitTickets = commitQuery();
+const filterTicketSet = filterTickets(titleTickets, commitTickets);
 
 Promise.all(filterTicketSet.map(async (jiraIssueID) => {
   try {
