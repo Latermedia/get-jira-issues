@@ -175,50 +175,52 @@ const commitTickets = commitQuery();
 const filterTicketSet = filterTickets(titleTickets, commitTickets);
 
 filterTicketSet
-  .then((jiraTickets) => {
+  .then(async (jiraTickets) => {
     console.log("Filtered Tickets: ");
     console.log(...jiraTickets);
 
     for (const jiraIssueID of jiraTickets) {
-      const singleIssue = `${jiraIssueID}`;
-      const issue = await jira.findIssue(singleIssue);
-      const projectKey = issue.fields.project.key;
+      try {
+        const singleIssue = `${jiraIssueID}`;
+        const issue = await jira.findIssue(singleIssue);
+        const projectKey = issue.fields.project.key;
 
-      console.log(projectKey);
+        console.log(projectKey);
 
-      const releaseTitleA = {
-        name: releaseTitle,
-      };
+        const releaseTitleA = {
+          name: releaseTitle,
+        };
 
-      await jira.createVersion({
-        name: releaseTitle,
-        project: projectKey,
-        description: fullDescription,
-      }).then((e) => {
-        console.log(`Project created ${projectKey}`);
-      }).catch((e) => {
-        console.log("Release page already exists");
-      });
+        await jira.createVersion({
+          name: releaseTitle,
+          project: projectKey,
+          description: fullDescription,
+        }).then((e) => {
+          console.log(`Project created ${projectKey}`);
+        }).catch((e) => {
+          console.log("Release page already exists");
+        });
 
-      await jira.updateIssue(singleIssue, {
-        fields: { fixVersions: [releaseTitleA] },
-      }).then((update) => {
-        console.log(`Fix Version updated: ${singleIssue} to ${releaseTitle}`);
-      });
+        await jira.updateIssue(singleIssue, {
+          fields: { fixVersions: [releaseTitleA] },
+        }).then((update) => {
+          console.log(`Fix Version updated: ${singleIssue} to ${releaseTitle}`);
+        });
 
-      let state = "";
-      if (projectKey === "FRBI") {
-        state = "Released";
-      } else if (projectKey === "OTEST") {
-        state = "Done";
-      } else {
-        state = "Closed";
+        let state = "";
+        if (projectKey === "FRBI") {
+          state = "Released";
+        } else if (projectKey === "OTEST") {
+          state = "Done";
+        } else {
+          state = "Closed";
+        }
+
+        await changeState(singleIssue, state);
+
+      } catch (error) {
+        console.error(`Error processing ticket ${jiraIssueID}: ${error.message}`);
       }
-
-      await changeState(singleIssue, state);
-
-    } catch (error) {
-       console.error(`Error processing ticket ${jiraIssueID}: ${error.message}`);
     }
   })
   .catch((error) => {
