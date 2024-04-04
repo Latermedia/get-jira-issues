@@ -116,11 +116,11 @@ async function filterTickets(titleTickets, commitTickets) {
     let jiraTicketSet = new Set();
 
     if (typeof titleTickets !== "undefined") {
-      titleTickets.forEach(ticket => jiraTicketSet.add(ticket));
+      [...titleTickets].forEach(ticket => jiraTicketSet.add(ticket));
     }
 
     if (typeof commitTickets !== "undefined") {
-      commitTickets.forEach(ticket => jiraTicketSet.add(ticket));
+      [...commitTickets].forEach(ticket => jiraTicketSet.add(ticket));
     }
 
     const excludeSprint = /Sprint-[0-9]+/gm;
