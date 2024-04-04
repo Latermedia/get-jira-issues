@@ -49,6 +49,7 @@ if (!pullRequestNumber) {
   process.exit(1);
 }
 
+
 const titleQuery = async () => {
   try {
     let titleResponse = await axios.get(githubPullFull, { headers: prHeaders });
@@ -72,6 +73,7 @@ const titleQuery = async () => {
     throw error;
   }
 };
+
 
 const commitQuery = async () => {
   try {
@@ -114,23 +116,27 @@ async function filterTickets(titleTickets, commitTickets) {
     let jiraTicketSet = new Set();
 
     if (typeof titleTickets !== "undefined") {
-      jiraTicketSet.add(...titleTickets);
+      titleTickets.forEach(ticket => jiraTicketSet.add(ticket));
     }
 
     if (typeof commitTickets !== "undefined") {
-      jiraTicketSet.add(...commitTickets);
+      commitTickets.forEach(ticket => jiraTicketSet.add(ticket));
     }
 
     const excludeSprint = /Sprint-[0-9]+/gm;
     const excludePe = /PE-[0-9]+/gm;
+    let ticketsToRemove = new Set();
 
-    jiraTicketSet.forEach((issue) => {
-      if (issue.match(excludeSprint) || issue.match(excludePe)) {
-        jiraTicketSet.delete(issue);
+    jiraTicketSet.forEach(ticket => {
+      if (ticket.match(excludeSprint) || ticket.match(excludePe)) {
+        ticketsToRemove.add(ticket);
       }
     });
 
+    ticketsToRemove.forEach(ticket => jiraTicketSet.delete(ticket));
+
     const jiraTickets = Array.from(jiraTicketSet);
+
     console.log("List of Jira issues:");
     console.log(...jiraTickets);
 
@@ -140,13 +146,14 @@ async function filterTickets(titleTickets, commitTickets) {
       process.exit(0);
     }
 
-    return jiraTicketSet;
+    return jiraTickets;
 
   } catch (error) {
-	console.error(`Error in filterTickets: ${error.message}`);
+    console.error(`Error in filterTickets: ${error.message}`);
     throw error;
   }
 }
+
 
 async function changeState(singleIssue, state) {
   try {
@@ -173,6 +180,7 @@ async function changeState(singleIssue, state) {
 const titleTickets = titleQuery();
 const commitTickets = commitQuery();
 const filterTicketSet = filterTickets(titleTickets, commitTickets);
+
 
 filterTicketSet
   .then(async (jiraTickets) => {
