@@ -114,13 +114,15 @@ const commitQuery = async () => {
 async function filterTickets(titleTickets, commitTickets) {
   try {
     let jiraTicketSet = new Set();
+    const titleT = Array.from(titleTickets);
+	const commitT = Array.from(commitTickets);
 
     if (typeof titleTickets !== "undefined") {
-      [...titleTickets].forEach(ticket => jiraTicketSet.add(ticket));
+      titleT.forEach(ticket => jiraTicketSet.add(ticket));
     }
 
     if (typeof commitTickets !== "undefined") {
-      [...commitTickets].forEach(ticket => jiraTicketSet.add(ticket));
+      commitT.forEach(ticket => jiraTicketSet.add(ticket));
     }
 
     const excludeSprint = /Sprint-[0-9]+/gm;
