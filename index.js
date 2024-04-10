@@ -78,23 +78,26 @@ const titleQuery = async () => {
 const commitQuery = async () => {
   try {
     let jiraTicketSet = new Set();
-    let commitResponse = await axios.get(githubFullUrl, { headers: prHeaders });
 
-    if (!commitResponse || !commitResponse.data || !Array.isArray(commitResponse.data)) {
-      throw new Error('Failed to fetch commit data from GitHub API.');
+    for (let i = 1; i <= 10; i++) {
+      let commitResponse = await axios.get(`${githubFullUrl}?per_page=100&page=${i}`, { headers: prHeaders });
+
+      if (!commitResponse || !commitResponse.data || !Array.isArray(commitResponse.data)) {
+        throw new Error('Failed to fetch commit data from GitHub API page=${i}.');
+      }
+
+      commitResponse.data.forEach(commit => {
+        if (!commit || !commit.commit || !commit.commit.message) {
+          console.warn('Commit message not found or invalid:', commit);
+          return;
+        }
+
+        let matches = commit.commit.message.match(pattern);
+        if (matches) {
+          matches.forEach(match => jiraTicketSet.add(match));
+        }
+      });
     }
-
-    commitResponse.data.forEach(commit => {
-      if (!commit || !commit.commit || !commit.commit.message) {
-        console.warn('Commit message not found or invalid:', commit);
-        return;
-      }
-
-      let matches = commit.commit.message.match(pattern);
-      if (matches) {
-        matches.forEach(match => jiraTicketSet.add(match));
-      }
-    });
 
     if (jiraTicketSet.size > 0) {
       console.log("Added tickets from commits to array:", ...jiraTicketSet);
