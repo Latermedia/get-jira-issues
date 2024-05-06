@@ -186,10 +186,7 @@ async function main() {
     const titleTickets = await titleQuery();
     const commitTickets = await commitQuery();
     const filterTicketSet = await filterTickets(titleTickets, commitTickets);
-
-    console.log("Filtered Tickets: ");
-    console.log(...filterTicketSet);
-	const projectKeyListFull = ["AFL", "AR", "BUG", "CDS", "CIAM", "CMP", "FRBI", "LIB", "PE", "SD", "SDC", "SMAUG", "WHI"];
+    const projectKeyListFull = ["AFL", "AR", "BUG", "CDS", "CIAM", "CMP", "FRBI", "LIB", "PE", "SD", "SDC", "SMAUG", "WHI"];
 
     for (const projectKeyList of projectKeyListFull) {
 
@@ -203,6 +200,9 @@ async function main() {
         console.log(`Release page already exists ${projectKeyList}`);
       });
 	}
+
+    console.log("Filtered Tickets: ");
+    console.log(...filterTicketSet);
 
     for (const jiraIssueID of filterTicketSet) {
       try {
