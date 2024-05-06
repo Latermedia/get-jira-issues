@@ -189,7 +189,7 @@ async function main() {
 
     console.log("Filtered Tickets: ");
     console.log(...filterTicketSet);
-	const projectKeyListFull = [AFL, AR, BUG, CDS, CIAM, CMP, FRBI, LIB, PE, SD, SDC, SMAUG, WHI];
+	const projectKeyListFull = ["AFL", "AR", "BUG", "CDS", "CIAM", "CMP", "FRBI", "LIB", "PE", "SD", "SDC", "SMAUG", "WHI"];
 
     for (const projectKeyList of projectKeyListFull) {
 
