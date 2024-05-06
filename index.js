@@ -188,6 +188,7 @@ async function main() {
     const filterTicketSet = await filterTickets(titleTickets, commitTickets);
     const projectKeyListFull = ["AFL", "AR", "BUG", "CDS", "CIAM", "CMP", "FRBI", "LIB", "PE", "SD", "SDC", "SMAUG", "WHI"];
 
+    console.log("Project Release Pages Created: ");
     for (const projectKeyList of projectKeyListFull) {
 
       await jira.createVersion({
