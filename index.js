@@ -4,7 +4,6 @@ const jiraApi = require("jira-client");
 const githubApiUrl = "https://api.github.com/repos/";
 const githubPulls = "/pulls/";
 const githubCommits = "/commits";
-const projectKeyListDup = [];
 
 const pullRequestNumber = process.env.PR_NUMBER;
 const repository = process.env.REPO;
@@ -187,6 +186,21 @@ async function main() {
     const titleTickets = await titleQuery();
     const commitTickets = await commitQuery();
     const filterTicketSet = await filterTickets(titleTickets, commitTickets);
+    const projectKeyListFull = ["AFL", "AR", "BUG", "CDS", "CIAM", "CMP", "FRBI", "LIB", "PE", "SD", "SDC", "SMAUG", "WHI"];
+
+    console.log("Project Release Pages Created: ");
+    for (const projectKeyList of projectKeyListFull) {
+
+      await jira.createVersion({
+        name: releaseTitle,
+        project: projectKeyList,
+        description: fullDescription,
+      }).then((e) => {
+        console.log(`Project created ${projectKeyList}`);
+      }).catch((e) => {
+        console.log(`Release page already exists ${projectKeyList}`);
+      });
+	}
 
     console.log("Filtered Tickets: ");
     console.log(...filterTicketSet);
@@ -202,16 +216,6 @@ async function main() {
         const releaseTitleA = {
           name: releaseTitle,
         };
-
-        await jira.createVersion({
-          name: releaseTitle,
-          project: projectKey,
-          description: fullDescription,
-        }).then((e) => {
-          console.log(`Project created ${projectKey}`);
-        }).catch((e) => {
-          console.log("Release page already exists");
-        });
 
         await jira.updateIssue(singleIssue, {
           fields: { fixVersions: [releaseTitleA] },
@@ -233,6 +237,7 @@ async function main() {
         console.error(`Error processing ticket ${jiraIssueID}: ${error.message}`);
       }
     }
+
   } catch (error) {
     console.error(`Error: ${error.message}`);
     process.exit(1);
