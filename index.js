@@ -6,7 +6,7 @@ const githubPulls = "/pulls/";
 const githubCommits = "/commits";
 
 const lastVersionSHA    = process.env.PREVIOUS_RELEASE_SHA
-const pullRequestNumber = process.env.PR_NUMBER;
+// const pullRequestNumber = process.env.PR_NUMBER;
 const repository        = process.env.REPO;
 const githubToken       = process.env.GH_API_TOKEN;
 const jiraBaseUrl       = process.env.JIRA_SERVER;
@@ -16,8 +16,8 @@ const versionNumber     = process.env.VERSION_NUMBER;
 const sprintName        = process.env.SPRINT_NAME;
 
 const githubCommitHistoryURL = `${githubApiUrl}${repository}/commits`;
-const githubFullUrl = `${githubApiUrl}${repository}${githubPulls}${pullRequestNumber}${githubCommits}`;
-const githubPullFull = `${githubApiUrl}${repository}${githubPulls}${pullRequestNumber}`;
+// const githubFullUrl = `${githubApiUrl}${repository}${githubPulls}${pullRequestNumber}${githubCommits}`;
+// const githubPullFull = `${githubApiUrl}${repository}${githubPulls}${pullRequestNumber}`;
 const fullDescription = "Production Release for Sprint: " + sprintName;
 const versionStrip = versionNumber.match(/v(\d+\.\d+\.\d+)/);
 const finalVersionNumber = versionStrip[1];
@@ -45,30 +45,49 @@ if (!repository) {
   process.exit(1);
 }
 
-if (!pullRequestNumber) {
-  console.error("PR_NUMBER environment variable not provided.");
-  process.exit(1);
-}
+// if (!pullRequestNumber) {
+//   console.error("PR_NUMBER environment variable not provided.");
+//   process.exit(1);
+// }
 
 
 const shaQuery = async () => {
   try {
     let jiraTicketSet = new Set();
+    let lastCommitFound = false;
 
+    // once we find the last commit, we stop going through paginated responses
     for (let i = 1; i <= 10; i++) {
-      console.log("Getting tickets beginning with ${lastVersionSHA}");
-      let shaResponse = await axios.get(`${githubCommitHistoryURL}?sha=${lastVersionSHA}&per_page=100&page=${i}`, { headers: prHeaders });
+      if(lastCommitFound) {
+        break;
+      }
+      let shaResponse = await axios.get(`${githubCommitHistoryURL}?per_page=100&page=${i}`, { headers: prHeaders });
 
       if (!shaResponse || !shaResponse.data || !Array.isArray(shaResponse.data)) {
         throw new Error('Failed to fetch commit data from GitHub API page=${i}.');
       }
 
-      shaResponse.data.forEach(commit => {
+      // filter out everything after the lastVersionSha, reject everything after
+      let commits = [];
+      for(let commit of shaResponse.data){
+        console.log(commit);
         if (!commit || !commit.commit || !commit.commit.message) {
           console.warn('Commit message not found or invalid:', commit);
           return;
         }
 
+        if (commit.sha != lastVersionSHA) {
+          commits.push(commit);
+        }
+        else {
+          lastCommitFound = true;
+          break;
+        }
+      };
+
+      // console.log(commits);
+
+      commits.forEach(commit => {
         let matches = commit.commit.message.match(pattern);
         if (matches) {
           matches.forEach(match => jiraTicketSet.add(match));
@@ -90,68 +109,68 @@ const shaQuery = async () => {
   }
 };
 
-const titleQuery = async () => {
-  try {
-    let titleResponse = await axios.get(githubPullFull, { headers: prHeaders });
+// const titleQuery = async () => {
+//   try {
+//     let titleResponse = await axios.get(githubPullFull, { headers: prHeaders });
 
-    if (!titleResponse || !titleResponse.data || !titleResponse.data.title) {
-      throw new Error('Failed to fetch pull request title from GitHub API.');
-    }
+//     if (!titleResponse || !titleResponse.data || !titleResponse.data.title) {
+//       throw new Error('Failed to fetch pull request title from GitHub API.');
+//     }
 
-    let jiraTicketSet = new Set();
-    const prTitleCheck = titleResponse.data.title.match(pattern);
+//     let jiraTicketSet = new Set();
+//     const prTitleCheck = titleResponse.data.title.match(pattern);
 
-    if (prTitleCheck) {
-      prTitleCheck.forEach(match => jiraTicketSet.add(match));
-      console.log("Added tickets from title to array:", ...jiraTicketSet);
-    }
+//     if (prTitleCheck) {
+//       prTitleCheck.forEach(match => jiraTicketSet.add(match));
+//       console.log("Added tickets from title to array:", ...jiraTicketSet);
+//     }
 
-    return jiraTicketSet;
+//     return jiraTicketSet;
 
-  } catch (error) {
-    console.error('Error in titleQuery:', error.message);
-    throw error;
-  }
-};
+//   } catch (error) {
+//     console.error('Error in titleQuery:', error.message);
+//     throw error;
+//   }
+// };
 
 
-const commitQuery = async () => {
-  try {
-    let jiraTicketSet = new Set();
+// const commitQuery = async () => {
+//   try {
+//     let jiraTicketSet = new Set();
 
-    for (let i = 1; i <= 10; i++) {
-      let commitResponse = await axios.get(`${githubFullUrl}?per_page=100&page=${i}`, { headers: prHeaders });
+//     for (let i = 1; i <= 10; i++) {
+//       let commitResponse = await axios.get(`${githubFullUrl}?per_page=100&page=${i}`, { headers: prHeaders });
 
-      if (!commitResponse || !commitResponse.data || !Array.isArray(commitResponse.data)) {
-        throw new Error('Failed to fetch commit data from GitHub API page=${i}.');
-      }
+//       if (!commitResponse || !commitResponse.data || !Array.isArray(commitResponse.data)) {
+//         throw new Error('Failed to fetch commit data from GitHub API page=${i}.');
+//       }
 
-      commitResponse.data.forEach(commit => {
-        if (!commit || !commit.commit || !commit.commit.message) {
-          console.warn('Commit message not found or invalid:', commit);
-          return;
-        }
+//       commitResponse.data.forEach(commit => {
+//         if (!commit || !commit.commit || !commit.commit.message) {
+//           console.warn('Commit message not found or invalid:', commit);
+//           return;
+//         }
 
-        let matches = commit.commit.message.match(pattern);
-        if (matches) {
-          matches.forEach(match => jiraTicketSet.add(match));
-        }
-      });
-    }
+//         let matches = commit.commit.message.match(pattern);
+//         if (matches) {
+//           matches.forEach(match => jiraTicketSet.add(match));
+//         }
+//       });
+//     }
 
-    if (jiraTicketSet.size > 0) {
-      console.log("Added tickets from commits to array:", ...jiraTicketSet);
-    } else {
-      console.log("No Jira tickets found in commit messages.");
-    }
+//     if (jiraTicketSet.size > 0) {
+//       console.log("Added tickets from commits to array:", ...jiraTicketSet);
+//     } else {
+//       console.log("No Jira tickets found in commit messages.");
+//     }
 
-    return jiraTicketSet;
+//     return jiraTicketSet;
 
-  } catch (error) {
-    console.error('Error in commitQuery:', error.message);
-    throw error;
-  }
-};
+//   } catch (error) {
+//     console.error('Error in commitQuery:', error.message);
+//     throw error;
+//   }
+// };
 
 
 async function filterTickets(titleTickets, commitTickets) {
@@ -200,27 +219,27 @@ async function filterTickets(titleTickets, commitTickets) {
 }
 
 
-async function changeState(singleIssue, state) {
-  try {
-    const transitions = await jira.listTransitions(singleIssue);
-    const filteredTransition = transitions.transitions.find(t => t.name === state);
+// async function changeState(singleIssue, state) {
+//   try {
+//     const transitions = await jira.listTransitions(singleIssue);
+//     const filteredTransition = transitions.transitions.find(t => t.name === state);
 
-    if (!filteredTransition) {
-      throw new Error(`Transition '${state}' not found for issue ${singleIssue}.`);
-    }
+//     if (!filteredTransition) {
+//       throw new Error(`Transition '${state}' not found for issue ${singleIssue}.`);
+//     }
 
-    const transitionId = filteredTransition.id;
+//     const transitionId = filteredTransition.id;
 
-    await jira.transitionIssue(singleIssue, {
-      transition: { id: transitionId }
-    });
+//     await jira.transitionIssue(singleIssue, {
+//       transition: { id: transitionId }
+//     });
 
-    console.log(`Issue ${singleIssue} transitioned to ${state}.`);
-  } catch (error) {
-    console.error(`Error in changeState: ${error.message}`);
-    throw error;
-  }
-}
+//     console.log(`Issue ${singleIssue} transitioned to ${state}.`);
+//   } catch (error) {
+//     console.error(`Error in changeState: ${error.message}`);
+//     throw error;
+//   }
+// }
 
 async function main() {
   try {
@@ -230,55 +249,55 @@ async function main() {
     const filterTicketSet = await shaQuery();
     const projectKeyListFull = ["AFL", "AR", "BUG", "CDS", "CIAM", "CMP", "FRBI", "LIB", "PE", "SD", "SDC", "SMAUG", "WHI"];
 
-    console.log("Project Release Pages Created: ");
-    for (const projectKeyList of projectKeyListFull) {
+  //   console.log("Project Release Pages Created: ");
+  //   for (const projectKeyList of projectKeyListFull) {
 
-      await jira.createVersion({
-        name: releaseTitle,
-        project: projectKeyList,
-        description: fullDescription,
-      }).then((e) => {
-        console.log(`Project created ${projectKeyList}`);
-      }).catch((e) => {
-        console.log(`Release page already exists ${projectKeyList}`);
-      });
-	}
+  //     await jira.createVersion({
+  //       name: releaseTitle,
+  //       project: projectKeyList,
+  //       description: fullDescription,
+  //     }).then((e) => {
+  //       console.log(`Project created ${projectKeyList}`);
+  //     }).catch((e) => {
+  //       console.log(`Release page already exists ${projectKeyList}`);
+  //     });
+	// }
 
     console.log("Filtered Tickets: ");
     console.log(...filterTicketSet);
 
-    for (const jiraIssueID of filterTicketSet) {
-      try {
-        const singleIssue = `${jiraIssueID}`;
-        const issue = await jira.findIssue(singleIssue);
-        const projectKey = issue.fields.project.key;
+    // for (const jiraIssueID of filterTicketSet) {
+    //   try {
+    //     const singleIssue = `${jiraIssueID}`;
+    //     const issue = await jira.findIssue(singleIssue);
+    //     const projectKey = issue.fields.project.key;
 
-        console.log(projectKey);
+    //     console.log(projectKey);
 
-        const releaseTitleA = {
-          name: releaseTitle,
-        };
+    //     const releaseTitleA = {
+    //       name: releaseTitle,
+    //     };
 
-        await jira.updateIssue(singleIssue, {
-          fields: { fixVersions: [releaseTitleA] },
-        }).then((update) => {
-          console.log(`Fix Version updated: ${singleIssue} to ${releaseTitle}`);
-        });
+    //     await jira.updateIssue(singleIssue, {
+    //       fields: { fixVersions: [releaseTitleA] },
+    //     }).then((update) => {
+    //       console.log(`Fix Version updated: ${singleIssue} to ${releaseTitle}`);
+    //     });
 
-        let state = "";
-        if (projectKey === "FRBI") {
-          state = "Released";
-        } else if (projectKey === "OTEST") {
-          state = "Done";
-        } else {
-          state = "Closed";
-        }
+    //     let state = "";
+    //     if (projectKey === "FRBI") {
+    //       state = "Released";
+    //     } else if (projectKey === "OTEST") {
+    //       state = "Done";
+    //     } else {
+    //       state = "Closed";
+    //     }
 
-        await changeState(singleIssue, state);
-      } catch (error) {
-        console.error(`Error processing ticket ${jiraIssueID}: ${error.message}`);
-      }
-    }
+    //     await changeState(singleIssue, state);
+    //   } catch (error) {
+    //     console.error(`Error processing ticket ${jiraIssueID}: ${error.message}`);
+    //   }
+    // }
 
   } catch (error) {
     console.error(`Error: ${error.message}`);
