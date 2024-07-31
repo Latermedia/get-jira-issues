@@ -5,7 +5,8 @@ const githubApiUrl = "https://api.github.com/repos/";
 const githubPulls = "/pulls/";
 const githubCommits = "/commits";
 
-const lastVersionSHA    = process.env.PREVIOUS_RELEASE_SHA
+// const lastVersionSHA    = process.env.PREVIOUS_RELEASE_SHA
+const lastVersionTag    = process.env.PREVIOUS_RELEASE_TAG
 // const pullRequestNumber = process.env.PR_NUMBER;
 const repository        = process.env.REPO;
 const githubToken       = process.env.GH_API_TOKEN;
@@ -49,6 +50,24 @@ if (!repository) {
 //   console.error("PR_NUMBER environment variable not provided.");
 //   process.exit(1);
 // }
+
+const getLastReleaseSha = async () => {
+  try {
+      // /repos/{owner}/{repo}/git/tags/{tag_sha}
+      let tagResponse = await axios.get(`${githubApiUrl}${repository}/git/tags/${lastVersionTag}`, { headers: prHeaders });
+
+      if (!tagResponse || !tagResponse.sha ) {
+        throw new Error('Failed to fetch tag data from GitHub API.');
+      }
+
+      return tagResponse.sha;
+
+    catch (error) {
+      console.error('Error in getLastReleaseSha:', error.message);
+      throw error;
+    }
+  }
+};
 
 
 const shaQuery = async () => {
@@ -246,6 +265,7 @@ async function main() {
     // const titleTickets = await titleQuery();
     // const commitTickets = await commitQuery();
     // const filterTicketSet = await filterTickets(titleTickets, commitTickets);
+    const lastVersionSHA = await getLastReleaseSha();
     const filterTicketSet = await shaQuery();
     const projectKeyListFull = ["AFL", "AR", "BUG", "CDS", "CIAM", "CMP", "FRBI", "LIB", "PE", "SD", "SDC", "SMAUG", "WHI"];
 
