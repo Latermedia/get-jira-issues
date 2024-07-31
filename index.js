@@ -5,15 +5,17 @@ const githubApiUrl = "https://api.github.com/repos/";
 const githubPulls = "/pulls/";
 const githubCommits = "/commits";
 
+const lastVersionSHA    = process.env.PREVIOUS_RELEASE_SHA
 const pullRequestNumber = process.env.PR_NUMBER;
-const repository = process.env.REPO;
-const githubToken = process.env.GH_API_TOKEN;
-const jiraBaseUrl = process.env.JIRA_SERVER;
-const jiraUser = process.env.JIRA_SERVICE_USER;
-const jiraToken = process.env.JIRA_SERVICE_API_TOKEN;
-const versionNumber = process.env.VERSION_NUMBER;
-const sprintName = process.env.SPRINT_NAME;
+const repository        = process.env.REPO;
+const githubToken       = process.env.GH_API_TOKEN;
+const jiraBaseUrl       = process.env.JIRA_SERVER;
+const jiraUser          = process.env.JIRA_SERVICE_USER;
+const jiraToken         = process.env.JIRA_SERVICE_API_TOKEN;
+const versionNumber     = process.env.VERSION_NUMBER;
+const sprintName        = process.env.SPRINT_NAME;
 
+const githubCommitHistoryURL = `${githubApiUrl}${repository}/commits`;
 const githubFullUrl = `${githubApiUrl}${repository}${githubPulls}${pullRequestNumber}${githubCommits}`;
 const githubPullFull = `${githubApiUrl}${repository}${githubPulls}${pullRequestNumber}`;
 const fullDescription = "Production Release for Sprint: " + sprintName;
@@ -48,6 +50,45 @@ if (!pullRequestNumber) {
   process.exit(1);
 }
 
+
+const shaQuery = async () => {
+  try {
+    let jiraTicketSet = new Set();
+
+    for (let i = 1; i <= 10; i++) {
+      console.log("Getting tickets beginning with ${lastVersionSHA}");
+      let shaResponse = await axios.get(`${githubCommitHistoryURL}?sha=${lastVersionSHA}&per_page=100&page=${i}`, { headers: prHeaders });
+
+      if (!shaResponse || !shaResponse.data || !Array.isArray(shaResponse.data)) {
+        throw new Error('Failed to fetch commit data from GitHub API page=${i}.');
+      }
+
+      shaResponse.data.forEach(commit => {
+        if (!commit || !commit.commit || !commit.commit.message) {
+          console.warn('Commit message not found or invalid:', commit);
+          return;
+        }
+
+        let matches = commit.commit.message.match(pattern);
+        if (matches) {
+          matches.forEach(match => jiraTicketSet.add(match));
+        }
+      });
+    }
+
+    if (jiraTicketSet.size > 0) {
+      console.log("Added tickets from commit history to array:", ...jiraTicketSet);
+    } else {
+      console.log("No Jira tickets found in commit messages.");
+    }
+
+    return jiraTicketSet;
+
+  } catch (error) {
+    console.error('Error in shaQuery:', error.message);
+    throw error;
+  }
+};
 
 const titleQuery = async () => {
   try {
@@ -183,9 +224,10 @@ async function changeState(singleIssue, state) {
 
 async function main() {
   try {
-    const titleTickets = await titleQuery();
-    const commitTickets = await commitQuery();
-    const filterTicketSet = await filterTickets(titleTickets, commitTickets);
+    // const titleTickets = await titleQuery();
+    // const commitTickets = await commitQuery();
+    // const filterTicketSet = await filterTickets(titleTickets, commitTickets);
+    const filterTicketSet = await shaQuery();
     const projectKeyListFull = ["AFL", "AR", "BUG", "CDS", "CIAM", "CMP", "FRBI", "LIB", "PE", "SD", "SDC", "SMAUG", "WHI"];
 
     console.log("Project Release Pages Created: ");
