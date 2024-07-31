@@ -1,24 +1,28 @@
 const axios = require("axios");
 const jiraApi = require("jira-client");
 
+
+// process.env variables
+// const pullRequestNumber = process.env.PR_NUMBER;
+const repository             = process.env.REPO;
+const githubToken            = process.env.GH_API_TOKEN;
+const jiraBaseUrl            = process.env.JIRA_SERVER;
+const jiraUser               = process.env.JIRA_SERVICE_USER;
+const jiraToken              = process.env.JIRA_SERVICE_API_TOKEN;
+const versionNumber          = process.env.VERSION_NUMBER;
+const previousVersionNumber  = process.env.PREVIOUS_VERSION_NUMBER;
+const sprintName             = process.env.SPRINT_NAME;
+const releaseBranch          = process.env.RELEASE_BRANCH
+
+// github api setup
 const githubApiUrl = "https://api.github.com/repos/";
 const githubPulls = "/pulls/";
 const githubCommits = "/commits";
-
-// const lastVersionSHA    = process.env.PREVIOUS_RELEASE_SHA
-const lastVersionTag    = process.env.PREVIOUS_RELEASE_TAG
-// const pullRequestNumber = process.env.PR_NUMBER;
-const repository        = process.env.REPO;
-const githubToken       = process.env.GH_API_TOKEN;
-const jiraBaseUrl       = process.env.JIRA_SERVER;
-const jiraUser          = process.env.JIRA_SERVICE_USER;
-const jiraToken         = process.env.JIRA_SERVICE_API_TOKEN;
-const versionNumber     = process.env.VERSION_NUMBER;
-const sprintName        = process.env.SPRINT_NAME;
-
 const githubCommitHistoryURL = `${githubApiUrl}${repository}/commits`;
 // const githubFullUrl = `${githubApiUrl}${repository}${githubPulls}${pullRequestNumber}${githubCommits}`;
 // const githubPullFull = `${githubApiUrl}${repository}${githubPulls}${pullRequestNumber}`;
+
+// Other variables
 const fullDescription = "Production Release for Sprint: " + sprintName;
 const versionStrip = versionNumber.match(/v(\d+\.\d+\.\d+)/);
 const finalVersionNumber = versionStrip[1];
@@ -46,31 +50,35 @@ if (!repository) {
   process.exit(1);
 }
 
-// if (!pullRequestNumber) {
-//   console.error("PR_NUMBER environment variable not provided.");
-//   process.exit(1);
-// }
+if (!releaseBranch) {
+  console.error("RELEASE BRANCH environment variable not provided.");
+  process.exit(1);
+}
 
-const getLastReleaseSha = async () => {
+if (!previousVersionNumber) {
+  console.error("PREVIOUS_VERSION_NUMBER environment variable not provided.");
+  process.exit(1);
+}
+
+// compare this release to previous release and tag all tickets
+// previous release is tagged with version number and new release is sent in as var from action
+
+const shaQuery = async () => {
+  let lastVersionSHA = "";
   try {
-      // /repos/{owner}/{repo}/git/tags/{tag_sha}
-      let tagResponse = await axios.get(`${githubApiUrl}${repository}/git/tags/${lastVersionTag}`, { headers: prHeaders });
-
-      if (!tagResponse || !tagResponse.sha ) {
+      let tagResponse = await axios.get(`${githubCommitHistoryURL}/${previousVersionNumber}`, { headers: prHeaders });
+      
+      if (!tagResponse || !tagResponse.data.sha ) {
         throw new Error('Failed to fetch tag data from GitHub API.');
       }
 
-      return tagResponse.sha;
-
+      lastVersionSHA = tagResponse.data.sha;
+    }
     catch (error) {
       console.error('Error in getLastReleaseSha:', error.message);
       throw error;
     }
-  }
-};
 
-
-const shaQuery = async () => {
   try {
     let jiraTicketSet = new Set();
     let lastCommitFound = false;
@@ -80,7 +88,7 @@ const shaQuery = async () => {
       if(lastCommitFound) {
         break;
       }
-      let shaResponse = await axios.get(`${githubCommitHistoryURL}?per_page=100&page=${i}`, { headers: prHeaders });
+      let shaResponse = await axios.get(`${githubCommitHistoryURL}?sha=${releaseBranch}&per_page=100&page=${i}`, { headers: prHeaders });
 
       if (!shaResponse || !shaResponse.data || !Array.isArray(shaResponse.data)) {
         throw new Error('Failed to fetch commit data from GitHub API page=${i}.');
@@ -89,7 +97,6 @@ const shaQuery = async () => {
       // filter out everything after the lastVersionSha, reject everything after
       let commits = [];
       for(let commit of shaResponse.data){
-        console.log(commit);
         if (!commit || !commit.commit || !commit.commit.message) {
           console.warn('Commit message not found or invalid:', commit);
           return;
@@ -103,8 +110,6 @@ const shaQuery = async () => {
           break;
         }
       };
-
-      // console.log(commits);
 
       commits.forEach(commit => {
         let matches = commit.commit.message.match(pattern);
@@ -262,47 +267,50 @@ async function filterTickets(titleTickets, commitTickets) {
 
 async function main() {
   try {
+    // old way
     // const titleTickets = await titleQuery();
     // const commitTickets = await commitQuery();
     // const filterTicketSet = await filterTickets(titleTickets, commitTickets);
-    const lastVersionSHA = await getLastReleaseSha();
+    
+    // new way
     const filterTicketSet = await shaQuery();
-    const projectKeyListFull = ["AFL", "AR", "BUG", "CDS", "CIAM", "CMP", "FRBI", "LIB", "PE", "SD", "SDC", "SMAUG", "WHI"];
+    // const projectKeyListFull = ["AFL", "AR", "BUG", "CDS", "CIAM", "CMP", "FRBI", "LIB", "OTEST", "PE", "SD", "SDC", "SMAUG", "WHI"];
+    const projectKeyListFull = ["OTEST"];
 
-  //   console.log("Project Release Pages Created: ");
-  //   for (const projectKeyList of projectKeyListFull) {
+    console.log("Project Release Pages Created: ");
+    for (const projectKeyList of projectKeyListFull) {
 
-  //     await jira.createVersion({
-  //       name: releaseTitle,
-  //       project: projectKeyList,
-  //       description: fullDescription,
-  //     }).then((e) => {
-  //       console.log(`Project created ${projectKeyList}`);
-  //     }).catch((e) => {
-  //       console.log(`Release page already exists ${projectKeyList}`);
-  //     });
-	// }
+      await jira.createVersion({
+        name: releaseTitle,
+        project: projectKeyList,
+        description: fullDescription,
+      }).then((e) => {
+        console.log(`Project created ${projectKeyList}`);
+      }).catch((e) => {
+        console.log(`Release page already exists ${projectKeyList}`);
+      });
+	  }
 
     console.log("Filtered Tickets: ");
     console.log(...filterTicketSet);
 
-    // for (const jiraIssueID of filterTicketSet) {
-    //   try {
-    //     const singleIssue = `${jiraIssueID}`;
-    //     const issue = await jira.findIssue(singleIssue);
-    //     const projectKey = issue.fields.project.key;
+    for (const jiraIssueID of filterTicketSet) {
+      try {
+        const singleIssue = `${jiraIssueID}`;
+        const issue = await jira.findIssue(singleIssue);
+        const projectKey = issue.fields.project.key;
 
-    //     console.log(projectKey);
+        console.log(projectKey);
 
-    //     const releaseTitleA = {
-    //       name: releaseTitle,
-    //     };
+        const releaseTitleA = {
+          name: releaseTitle,
+        };
 
-    //     await jira.updateIssue(singleIssue, {
-    //       fields: { fixVersions: [releaseTitleA] },
-    //     }).then((update) => {
-    //       console.log(`Fix Version updated: ${singleIssue} to ${releaseTitle}`);
-    //     });
+        await jira.updateIssue(singleIssue, {
+          fields: { fixVersions: [releaseTitleA] },
+        }).then((update) => {
+          console.log(`Fix Version updated: ${singleIssue} to ${releaseTitle}`);
+        });
 
     //     let state = "";
     //     if (projectKey === "FRBI") {
@@ -314,10 +322,10 @@ async function main() {
     //     }
 
     //     await changeState(singleIssue, state);
-    //   } catch (error) {
-    //     console.error(`Error processing ticket ${jiraIssueID}: ${error.message}`);
-    //   }
-    // }
+      } catch (error) {
+        console.error(`Error processing ticket ${jiraIssueID}: ${error.message}`);
+      }
+    }
 
   } catch (error) {
     console.error(`Error: ${error.message}`);
