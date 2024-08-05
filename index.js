@@ -242,7 +242,7 @@ async function filterTickets(titleTickets, commitTickets) {
   }
 }
 
-
+// No Longer Used
 // async function changeState(singleIssue, state) {
 //   try {
 //     const transitions = await jira.listTransitions(singleIssue);
@@ -274,8 +274,8 @@ async function main() {
     
     // new way
     const filterTicketSet = await shaQuery();
-    // const projectKeyListFull = ["AFL", "AR", "BUG", "CDS", "CIAM", "CMP", "FRBI", "LIB", "PE", "SD", "SDC", "SMAUG", "WHI"];
-    const projectKeyListFull = ["OTEST"];
+    const projectKeyListFull = ["AFL", "AR", "BUG", "CDS", "CIAM", "CMP", "FRBI", "LIB", "PE", "SD", "SDC", "SMAUG", "WHI"];
+    // const projectKeyListFull = ["OTEST"];
 
     console.log("Project Release Pages Created: ");
     for (const projectKeyList of projectKeyListFull) {
