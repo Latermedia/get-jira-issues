@@ -24,7 +24,7 @@ const githubCommitHistoryURL = `${githubApiUrl}${repository}/commits`;
 
 // Other variables
 const fullDescription = "Production Release for Sprint: " + sprintName;
-const versionStrip = versionNumber.match(/v(\d+\.\d+\.\d+)/);
+const versionStrip = versionNumber.match(/v(\d*.*)/);
 const finalVersionNumber = versionStrip[1];
 const releaseTitle = "im-" + finalVersionNumber;
 const jiraUrlStrip = jiraBaseUrl.match(/https:\/\/(\S*)/);
