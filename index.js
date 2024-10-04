@@ -274,7 +274,7 @@ async function main() {
     
     // new way
     const filterTicketSet = await shaQuery();
-    const projectKeyListFull = ["AFL", "AR", "BUG", "CMP", "FRBI", "ID", "LIB", "PE", "SD", "SDC", "SMAUG", "WHI"];
+    const projectKeyListFull = ["AFL", "AR", "BUG", "CMP", "ID", "LIB", "PE", "SD", "SDC", "SMAUG", "WHI"];
     // const projectKeyListFull = ["OTEST"];
 
     console.log("Project Release Pages Created: ");
