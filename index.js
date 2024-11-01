@@ -30,6 +30,8 @@ const releaseTitle = "im-" + finalVersionNumber;
 const jiraUrlStrip = jiraBaseUrl.match(/https:\/\/(\S*)/);
 const jiraUrl = jiraUrlStrip[1];
 const pattern = /[a-zA-Z]{2,}-[0-9]+/gm;
+const trimPreviousVersionNumber = previousVersionNumber.trim();
+const trimReleaseBranch = releaseBranch.trim();
 
 const prHeaders = {
   Accept: "application/vnd.github.v3+json",
@@ -66,7 +68,7 @@ if (!previousVersionNumber) {
 const shaQuery = async () => {
   let lastVersionSHA = "";
   try {
-      let tagResponse = await axios.get(`${githubCommitHistoryURL}/${previousVersionNumber}`, { headers: prHeaders });
+      let tagResponse = await axios.get(`${githubCommitHistoryURL}/${trimPreviousVersionNumber}`, { headers: prHeaders });
       
       if (!tagResponse || !tagResponse.data.sha ) {
         throw new Error('Failed to fetch tag data from GitHub API.');
@@ -88,7 +90,7 @@ const shaQuery = async () => {
       if(lastCommitFound) {
         break;
       }
-      let shaResponse = await axios.get(`${githubCommitHistoryURL}?sha=${releaseBranch}&per_page=100&page=${i}`, { headers: prHeaders });
+      let shaResponse = await axios.get(`${githubCommitHistoryURL}?sha=${trimReleaseBranch}&per_page=100&page=${i}`, { headers: prHeaders });
 
       if (!shaResponse || !shaResponse.data || !Array.isArray(shaResponse.data)) {
         throw new Error('Failed to fetch commit data from GitHub API page=${i}.');
