@@ -30,8 +30,7 @@ const releaseTitle = "im-" + finalVersionNumber;
 const jiraUrlStrip = jiraBaseUrl.match(/https:\/\/(\S*)/);
 const jiraUrl = jiraUrlStrip[1];
 const pattern = /[a-zA-Z]{2,}-[0-9]+/gm;
-const trimPreviousVersionNumber = previousVersionNumber.trim();
-const trimReleaseBranch = releaseBranch.trim();
+
 
 const prHeaders = {
   Accept: "application/vnd.github.v3+json",
@@ -61,6 +60,9 @@ if (!previousVersionNumber) {
   console.error("PREVIOUS_VERSION_NUMBER environment variable not provided.");
   process.exit(1);
 }
+
+const trimPreviousVersionNumber = previousVersionNumber.trim();
+const trimReleaseBranch = releaseBranch.trim();
 
 // compare this release to previous release and tag all tickets
 // previous release is tagged with version number and new release is sent in as var from action
